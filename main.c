@@ -5,7 +5,7 @@
 #include <omp.h>
 #include <getopt.h>
 
-#define SIZE 128
+#define SIZE 4096
 #define OPTLIST "p:sb"
 
 bool pflag = false;
@@ -20,7 +20,7 @@ typedef struct lattice {
 
 LATTICE lattice;
 
-void seed_lattice() {
+void seed_sites() {
 	#pragma omp parallel for num_threads(8) collapse(2)
 		for (int i = 0; i < SIZE; i++) {
 			for (int j = 0; j < SIZE; j++) {
@@ -31,10 +31,21 @@ void seed_lattice() {
 		}
 }
 
+void seed_bonds () {
+	#pragma omp parallel for num_threads(8) collapse(2)
+		for (int i = 0; i < SIZE; i++) {
+			for (int j = 0; j < SIZE; j++) {
+
+			}
+
+		}
+}
+
 void find_bonds() {
 
-
 }
+
+
 
 int main(int argc, char *argv[]) {
 	int opt;
@@ -66,13 +77,21 @@ int main(int argc, char *argv[]) {
 		exit(EXIT_FAILURE);
 	}
 
-	seed_lattice();
+	if (sflag) {
+		seed_sites();
+	} else {
+		seed_bonds();
+	}
+
 	for (int i = 0; i < SIZE; i++) {
 		for (int j = 0; j < SIZE; j++) {
 			printf("%d ", lattice.sites[i][j]);
 		}
 		printf("\n");
 	}
+
+	
+
 
 	exit(EXIT_SUCCESS);
 }
