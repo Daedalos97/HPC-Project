@@ -5,14 +5,47 @@
 #include <omp.h>
 #include <getopt.h>
 
-#define SIZE 4096
+#define SIZE 128
 #define OPTLIST "p:sb"
 
 bool pflag = false;
 bool sflag = false;
 bool bflag = false;
+bool percolates = false;
 
 double prob;
+
+/**
+ *	Stack
+ */
+typedef struct node {
+	struct node* parent;
+	int position[2];
+} NODE;
+
+NODE *stack;
+int size_stack = 0;
+
+bool isEmpty() { return !(size_stack > 0); }
+
+NODE* peek() {
+	if (!isEmpty()) return &stack[size_stack];
+	else return NULL;
+}
+
+NODE* pop() {
+	if (!isEmpty()) {
+		return &stack[--size_stack];
+	} else return NULL;
+}
+
+void push(NODE n) {
+	stack = (NODE *) realloc(stack,sizeof(NODE)*(++size_stack));
+	stack[size_stack-1] = n;
+}
+/**
+ * End Stack
+ */
 
 typedef struct lattice {
 	bool sites[SIZE][SIZE];
@@ -35,17 +68,12 @@ void seed_bonds () {
 	#pragma omp parallel for num_threads(8) collapse(2)
 		for (int i = 0; i < SIZE; i++) {
 			for (int j = 0; j < SIZE; j++) {
-
 			}
-
 		}
 }
 
 void find_bonds() {
-
 }
-
-
 
 int main(int argc, char *argv[]) {
 	int opt;
@@ -83,15 +111,19 @@ int main(int argc, char *argv[]) {
 		seed_bonds();
 	}
 
+	/**
 	for (int i = 0; i < SIZE; i++) {
 		for (int j = 0; j < SIZE; j++) {
 			printf("%d ", lattice.sites[i][j]);
 		}
 		printf("\n");
+	}*/
+
+	if (percolates) {
+		printf("Percolates at %.8f\n", prob);
+	} else {
+
 	}
-
-	
-
 
 	exit(EXIT_SUCCESS);
 }
