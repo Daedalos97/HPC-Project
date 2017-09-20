@@ -11,8 +11,8 @@
 bool pflag = false;
 bool sflag = false;
 bool bflag = false;
-bool percolates = false;
 
+bool percolates = false;
 double prob;
 
 /**
@@ -49,7 +49,7 @@ void push(NODE n) {
  */
 
 typedef struct lattice {
-	bool sites[SIZE][SIZE];
+	bool sites[SIZE][SIZE]; //Change to int??
 } LATTICE;
 
 LATTICE lattice;
@@ -69,11 +69,15 @@ void seed_bonds () {
 	#pragma omp parallel for num_threads(8) collapse(2)
 		for (int i = 0; i < SIZE; i++) {
 			for (int j = 0; j < SIZE; j++) {
-				if ((double) (rand()/(RAND_MAX+1.0)) < prob) {
+				double r = (rand()/(RAND_MAX+1.0)),d = (rand()/(RAND_MAX+1.0));
+				if (r < prob) {
 					//Creates bonds wit surrounding sites by setting them to occupied
 					//NOT SURE IF THIS IS CORRECT!!!
 					lattice.sites[i][j] = true;
 					lattice.sites[i][j+(1%SIZE)] = true;
+				}
+				if (d < prob) {
+					latice.sites[i][j] = true;
 					lattice.sites[i+(1%SIZE)][j] = true;
 				}
 			}
@@ -113,6 +117,7 @@ int main(int argc, char *argv[]) {
 		exit(EXIT_FAILURE);
 	}
 
+	//Check if we are looking for the site percolation or bond.
 	if (sflag) {
 		seed_sites();
 	} else {
