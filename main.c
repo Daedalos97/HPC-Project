@@ -5,7 +5,7 @@
 #include <omp.h>
 #include <getopt.h>
 
-#define SIZE 64
+#define SIZE 32
 #define OPTLIST "p:sb"
 
 bool pflag = false;
@@ -48,18 +48,31 @@ void push(NODE n) {
  * End Stack
  */
 
+/**
+ * 0 = unoccupied, 1 = occupied, 2 = visited.
+ */
 typedef struct lattice {
-	bool sites[SIZE][SIZE]; //Change to int??
+	int sites[SIZE][SIZE]; //Change to int??
 } LATTICE;
 
 LATTICE lattice;
+
+void printNodes() {
+	for (int i = 0; i < SIZE; i++) {
+		for (int j = 0; j < SIZE; j++) {
+			printf("%d ", lattice.sites[i][j]);
+		}
+		printf("\n");
+	}
+	printf("\n");
+}
 
 void seed_sites() {
 	#pragma omp parallel for num_threads(8) collapse(2)
 		for (int i = 0; i < SIZE; i++) {
 			for (int j = 0; j < SIZE; j++) {
 				if ((double) (rand()/(RAND_MAX+1.0)) < prob) {
-					lattice.sites[i][j] = true;
+					lattice.sites[i][j] = 1;
 				}
 			}
 		}
@@ -73,18 +86,52 @@ void seed_bonds () {
 				if (r < prob) {
 					//Creates bonds wit surrounding sites by setting them to occupied
 					//NOT SURE IF THIS IS CORRECT!!!
-					lattice.sites[i][j] = true;
-					lattice.sites[i][j+(1%SIZE)] = true;
+					lattice.sites[i][j] = 1;
+					lattice.sites[i][j+(1%SIZE)] = 1;
 				}
 				if (d < prob) {
-					lattice.sites[i][j] = true;
-					lattice.sites[i+(1%SIZE)][j] = true;
+					lattice.sites[i][j] = 1;
+					lattice.sites[i+(1%SIZE)][j] = 1;
 				}
 			}
 		}
 }
 
-void find_bonds() {
+//This could skip over some values needs checking.
+void find_start(int* last_tried) {
+	for (int i = *last_tried; i < SIZE; i++) {
+		if (lattice.sites[0][i] == 1) {
+			lattice.sites[0][i] = 2; //visited.
+			NODE n = {NULL,{0,i}};
+			push(n);
+			*last_tried = i;
+			break;
+		} else if (lattice.sites[i][0] == 1) {
+			lattice.sites[i][0] = 2; //visited.
+			NODE n = {NULL,{i,0}};
+			push(n);
+			*last_tried = i;
+			break;
+		}
+	}
+}
+
+void addNode(NODE* n, int i, int j) {
+	NODE node = {n,{i,j}};
+	lattice.sites[i][j] = 2;
+	push(node);
+}
+
+bool check_percolates() {
+	while (!isEmpty()) {
+		NODE* n = pop();
+		int i = n->position[0],j = n->position[1];
+		if (lattice.sites[(i+1)%SIZE][j] == 1) addNode(n,i+1%SIZE,j);
+		if (lattice.sites[i][(j+1)%SIZE] == 1) addNode(n,i,(j+1)%SIZE);
+		if (lattice.sites[(i+SIZE-1)%SIZE][j] == 1) addNode(n,(i+SIZE-1)%SIZE,j);
+		if (lattice.sites[i][(j+SIZE-1)%SIZE] == 1) addNode(n, i, (j+SIZE-1)%SIZE);
+	}
+	return false;
 }
 
 int main(int argc, char *argv[]) {
@@ -125,10 +172,12 @@ int main(int argc, char *argv[]) {
 	}
 
 	for (int i = 0; i < SIZE; i++) {
-		for (int j = 0; j < SIZE; j++) {
-			printf("%d ", lattice.sites[i][j]);
+		find_start(&i);
+		if (check_percolates()) {
+			percolates = true;
+			break;
 		}
-		printf("\n");
+		printNodes();
 	}
 
 	if (percolates) {
