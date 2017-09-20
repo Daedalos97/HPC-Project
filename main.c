@@ -77,7 +77,7 @@ void seed_bonds () {
 					lattice.sites[i][j+(1%SIZE)] = true;
 				}
 				if (d < prob) {
-					latice.sites[i][j] = true;
+					lattice.sites[i][j] = true;
 					lattice.sites[i+(1%SIZE)][j] = true;
 				}
 			}
