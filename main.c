@@ -5,7 +5,7 @@
 #include <omp.h>
 #include <getopt.h>
 
-#define SIZE 32
+#define SIZE 96
 #define OPTLIST "p:sb"
 
 bool pflag = false;
@@ -98,22 +98,21 @@ void seed_bonds () {
 }
 
 //This could skip over some values needs checking.
-void find_start(int* last_tried) {
-	for (int i = *last_tried; i < SIZE; i++) {
+int find_start(int last_tried) {
+	bool found = false;
+	for (int i = last_tried; i < SIZE; i++) {
 		if (lattice.sites[0][i] == 1) {
 			lattice.sites[0][i] = 2; //visited.
 			NODE n = {NULL,{0,i}};
 			push(n);
-			*last_tried = i;
-			break;
 		} else if (lattice.sites[i][0] == 1) {
 			lattice.sites[i][0] = 2; //visited.
 			NODE n = {NULL,{i,0}};
 			push(n);
-			*last_tried = i;
-			break;
 		}
+		if (found) return i;
 	}
+	return SIZE;
 }
 
 void addNode(NODE* n, int i, int j) {
@@ -172,7 +171,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	for (int i = 0; i < SIZE; i++) {
-		find_start(&i);
+		i = find_start(i);
+
 		if (check_percolates()) {
 			percolates = true;
 			break;
