@@ -5,7 +5,7 @@
 #include <omp.h>
 #include <getopt.h>
 
-#define SIZE 128
+#define SIZE 64
 #define OPTLIST "p:sb"
 
 bool pflag = false;
@@ -33,6 +33,7 @@ NODE* peek() {
 	else return NULL;
 }
 
+//Remember to release memory or save elsewhere after you pop.
 NODE* pop() {
 	if (!isEmpty()) {
 		return &stack[--size_stack];
@@ -68,6 +69,13 @@ void seed_bonds () {
 	#pragma omp parallel for num_threads(8) collapse(2)
 		for (int i = 0; i < SIZE; i++) {
 			for (int j = 0; j < SIZE; j++) {
+				if ((double) (rand()/(RAND_MAX+1.0)) < prob) {
+					//Creates bonds wit surrounding sites by setting them to occupied
+					//NOT SURE IF THIS IS CORRECT!!!
+					lattice.sites[i][j] = true;
+					lattice.sites[i][j+(1%SIZE)] = true;
+					lattice.sites[i+(1%SIZE)][j] = true;
+				}
 			}
 		}
 }
@@ -111,18 +119,17 @@ int main(int argc, char *argv[]) {
 		seed_bonds();
 	}
 
-	/**
 	for (int i = 0; i < SIZE; i++) {
 		for (int j = 0; j < SIZE; j++) {
 			printf("%d ", lattice.sites[i][j]);
 		}
 		printf("\n");
-	}*/
+	}
 
 	if (percolates) {
 		printf("Percolates at %.8f\n", prob);
 	} else {
-
+		printf("Does not percolate\n");
 	}
 
 	exit(EXIT_SUCCESS);
