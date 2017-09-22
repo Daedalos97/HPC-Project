@@ -1,3 +1,7 @@
+/**
+ *	Student: Samuel Heath, Student Number: 21725083
+ *	Student: Abrar Amin, Student Number: 21518928
+ */
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -5,7 +9,9 @@
 #include <omp.h>
 #include <getopt.h>
 
-#define SIZE 96
+#include "stack.h"
+
+#define SIZE 22528
 #define OPTLIST "p:sb"
 
 bool pflag = false;
@@ -14,39 +20,6 @@ bool bflag = false;
 
 bool percolates = false;
 double prob;
-
-/**
- *	Stack
- */
-typedef struct node {
-	struct node* parent;
-	int position[2];
-} NODE;
-
-NODE *stack;
-int size_stack = 0;
-
-bool isEmpty() { return !(size_stack > 0); }
-
-NODE* peek() {
-	if (!isEmpty()) return &stack[size_stack];
-	else return NULL;
-}
-
-//Remember to release memory or save elsewhere after you pop.
-NODE* pop() {
-	if (!isEmpty()) {
-		return &stack[--size_stack];
-	} else return NULL;
-}
-
-void push(NODE n) {
-	stack = (NODE *) realloc(stack,sizeof(NODE)*(++size_stack));
-	stack[size_stack-1] = n;
-}
-/**
- * End Stack
- */
 
 /**
  * 0 = unoccupied, 1 = occupied, 2 = visited.
@@ -79,18 +52,15 @@ void seed_sites() {
 }
 
 void seed_bonds () {
-	#pragma omp parallel for num_threads(8) collapse(2)
+	#pragma omp parallel for num_threads(4) collapse(2)
 		for (int i = 0; i < SIZE; i++) {
 			for (int j = 0; j < SIZE; j++) {
-				double r = (rand()/(RAND_MAX+1.0)),d = (rand()/(RAND_MAX+1.0));
+				double r = (rand()/(RAND_MAX+1.0));
 				if (r < prob) {
 					//Creates bonds wit surrounding sites by setting them to occupied
 					//NOT SURE IF THIS IS CORRECT!!!
 					lattice.sites[i][j] = 1;
 					lattice.sites[i][j+(1%SIZE)] = 1;
-				}
-				if (d < prob) {
-					lattice.sites[i][j] = 1;
 					lattice.sites[i+(1%SIZE)][j] = 1;
 				}
 			}
@@ -105,7 +75,8 @@ int find_start(int last_tried) {
 			lattice.sites[0][i] = 2; //visited.
 			NODE n = {NULL,{0,i}};
 			push(n);
-		} else if (lattice.sites[i][0] == 1) {
+		}
+		if (lattice.sites[i][0] == 1) {
 			lattice.sites[i][0] = 2; //visited.
 			NODE n = {NULL,{i,0}};
 			push(n);
@@ -177,7 +148,7 @@ int main(int argc, char *argv[]) {
 			percolates = true;
 			break;
 		}
-		printNodes();
+		//printNodes();
 	}
 
 	if (percolates) {
