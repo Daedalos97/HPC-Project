@@ -11,7 +11,8 @@
 
 #include "stack.h"
 
-#define SIZE 22528
+#define SIZE 96
+//#define SIZE 22528
 #define OPTLIST "p:sb"
 
 bool pflag = false;
@@ -92,15 +93,37 @@ void addNode(NODE* n, int i, int j) {
 	push(node);
 }
 
-bool check_percolates() {
+bool check_cluster() {
+	int horiz[SIZE] = {0};
+	int vert[SIZE] = {0};
 	while (!isEmpty()) {
 		NODE* n = pop();
 		int i = n->position[0],j = n->position[1];
+		horiz[j] = 1;
+		vert[i] = 1;
 		if (lattice.sites[(i+1)%SIZE][j] == 1) addNode(n,i+1%SIZE,j);
 		if (lattice.sites[i][(j+1)%SIZE] == 1) addNode(n,i,(j+1)%SIZE);
 		if (lattice.sites[(i+SIZE-1)%SIZE][j] == 1) addNode(n,(i+SIZE-1)%SIZE,j);
 		if (lattice.sites[i][(j+SIZE-1)%SIZE] == 1) addNode(n, i, (j+SIZE-1)%SIZE);
 	}
+
+	int horiz_sum = 0, vert_sum = 0;
+	for (int i = 0; i < SIZE; ++i) {
+		horiz_sum += horiz[i];
+		vert_sum += vert[i];
+	}
+			
+	if (horiz_sum == SIZE && vert_sum == SIZE) {
+		printf("Percolates Horizontally and Vertically\n");
+		return true;
+	} else if (horiz_sum == SIZE) {
+		printf("Percolates Horizontally\n");
+		return true;
+	} else if (vert_sum == SIZE) {
+		printf("Percolates Vertically\n");
+		return true;
+	}
+	printf("%d\t%d\n",horiz_sum,vert_sum);
 	return false;
 }
 
@@ -143,16 +166,17 @@ int main(int argc, char *argv[]) {
 
 	for (int i = 0; i < SIZE; i++) {
 		i = find_start(i);
+			printNodes();
 
-		if (check_percolates()) {
+		if (check_cluster()) {
 			percolates = true;
+			printNodes();
 			break;
 		}
-		//printNodes();
 	}
 
 	if (percolates) {
-		printf("Percolates at %.8f\n", prob);
+		printf("Percolates at %4.8f\n", prob);
 	} else {
 		printf("Does not percolate\n");
 	}

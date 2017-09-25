@@ -5,8 +5,7 @@ typedef struct node {
 	int position[2];
 } NODE;
 
-extern NODE *stack;
-extern int size_stack;
+int getSize();
 
 bool isEmpty();
 
