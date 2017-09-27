@@ -11,7 +11,7 @@
 
 #include "stack.h"
 
-#define SIZE 96
+#define SIZE 512
 //#define SIZE 22528
 #define OPTLIST "p:sb"
 
@@ -166,11 +166,9 @@ int main(int argc, char *argv[]) {
 
 	for (int i = 0; i < SIZE; i++) {
 		i = find_start(i);
-			printNodes();
 
 		if (check_cluster()) {
 			percolates = true;
-			printNodes();
 			break;
 		}
 	}
