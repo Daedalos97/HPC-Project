@@ -1,4 +1,6 @@
 #include "lattice.h"
+#include <cstdio>
+#include <cstdlib>
 
 LATTICE lat;
 int local_len = 8;
@@ -14,23 +16,34 @@ void print_lattice(int len, char viewType)
 	{
 		for(int j = 0; j < len; j++)
 		{
-			if(viewType == 'v' || viewType == 'V'){
+			if(viewType == 'v' || viewType == 'V')
+			{
 				if(lat.lattice_array[i][j] == 1)
-					printf("#");
-				else if(lat.lattice_array[i][j]==2)
-					printf(" ");
+					printf("*");
+				else if(lat.lattice_array[i][j] == 2)
+					printf("\u2588");
 				else
 					printf(" ");
-			}else
-				printf(lat.lattice_array[i][j]);
+			}
+			else
+				printf("%i", lat.lattice_array[i][j]);
 		}
+		printf("\n");
 	}
 }
 
+/**
+ * A function that seeds the lattice
+ * */
+void seed_lattice(double siteProbability)
+{
+	
+}
 
 
 /**
  * Initialize the lattice struct to specified length.
+ * Dynamically allocates the array representing the lattice to a specified size.
  */
 void init_lattice(int len)
 {
@@ -42,10 +55,15 @@ void init_lattice(int len)
 	lat.lattice_dimension = len;
 	lat.lattice_array = (int**) malloc(len*sizeof(int*));
 	for(int i = 0; i < len; i++){
-		lattice_array[i] = (int*) malloc(len*sizeof(int));
+		lat.lattice_array[i] = (int*) malloc(len*sizeof(int));
 	}
 }
 
+
+/**
+ * Frees memory.
+ * TO DO 
+ */
 void destroy_lattice()
 {
 
