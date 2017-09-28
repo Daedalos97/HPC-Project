@@ -169,6 +169,7 @@ int main(int argc, char *argv[]) {
 
 		if (check_cluster()) {
 			percolates = true;
+			printNodes();
 			break;
 		}
 	}

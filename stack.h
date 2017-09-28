@@ -1,16 +1,14 @@
+#include <vector>
 #include <stdbool.h>
 
 typedef struct node {
-	struct node* parent;
 	int position[2];
 } NODE;
 
-int getSize();
+extern std::vector<NODE> stack;
 
-bool isEmpty();
-
+int get_size();
+bool is_empty();
 NODE* peek();
-
 NODE* pop();
-
 void push(NODE n);
