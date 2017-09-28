@@ -2,8 +2,14 @@
 #define LATTICE_H_INCLUDED
 
 typedef struct lattice {
-	int lattice_dimension;
+	int len;
 	int** lattice_array;
 } LATTICE;
+
+extern void init_lattice(int l);
+extern void destroy_lattice();
+extern void print_lattice(int l, char c);
+extern void seed_lattice_sites(double sp);
+extern void seed_lattice_bonds(double bp);
 
 #endif

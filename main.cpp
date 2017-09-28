@@ -1,7 +1,9 @@
+#include "lattice.h"
 #include <cstdio>
 #include <cstdlib>
+#include <ctime>
 
-const int LATSIZ = 8;
+const double SITEPROB = 0.5;
 
 //compile project:
 //g++ -std=c++11 -Wall -Werror -pedantic -c  lattice.cpp
@@ -11,8 +13,10 @@ const int LATSIZ = 8;
 int main(int argc, char** argv)
 {
 	//double percolation_probablity = atof(argc[1]);
-	//seed_sites();
-	double r = ((double) rand() / (RAND_MAX)) + 1;
-	printf("%f\n",r);
-	printf("%d \u2588#\u2588 \u2588 \u2588 \n",219);
+	init_lattice(8);
+	seed_lattice_bonds(SITEPROB);
+	print_lattice(8, 'v');
+	destroy_lattice(); //unimplemented..
+	return 0;
 }
+
