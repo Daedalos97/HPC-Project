@@ -1,13 +1,22 @@
+#include "search.h"
+#include "lattice.h"
 #include <cstdio>
 #include <cstdlib>
-#include "lattice.h"
+#include <ctime>
+#include <getopt.h>
+#include <ctype.h>
 
-const int LATSIZ = 8;
+#define OPTLIST "p:sb"
+bool pflag = false;
+bool sflag = false;
+bool bflag = false;
 
-void seed_sites()
-{
+bool percolates = false;
 
-}
+//compile project:
+//g++ -std=c++11 -Wall -Werror -pedantic -c  lattice.cpp
+//
+//alternatively you can use the provided Makefile.
 
 int main(int argc, char** argv)
 {
@@ -40,21 +49,18 @@ int main(int argc, char** argv)
 		exit(EXIT_FAILURE);
 	}
 
+	init_lattice(64);
+
 	//Check if we are looking for the site percolation or bond.
 	if (sflag) {
-		seed_sites();
+		seed_lattice_sites(prob);
 	} else {
-		seed_bonds();
+		seed_lattice_bonds(prob);
 	}
 
-	for (int i = 0; i < SIZE; i++) {
-		i = find_start(i);
+	search_lattice();
 
-		if (check_cluster()) {
-			percolates = true;
-			break;
-		}
-	}
+	print_lattice(lat.len,'v');
 
 	if (percolates) {
 		printf("Percolates at %4.8f\n", prob);
@@ -64,3 +70,4 @@ int main(int argc, char** argv)
 
 	exit(EXIT_SUCCESS);
 }
+
