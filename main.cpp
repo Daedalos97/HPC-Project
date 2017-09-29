@@ -18,7 +18,7 @@ bool bflag = false;
 int lat_size = 4;
 
 void start_search() {
-	while (lat_size <= 128) {
+	while (lat_size <= 256) {
 		init_lattice();
 		//Check if we are looking for the site percolation or bond.
 		if (sflag) {
