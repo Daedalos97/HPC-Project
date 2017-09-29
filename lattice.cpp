@@ -19,9 +19,9 @@ void print_lattice(int len, char viewType)
 			if(viewType == 'v' || viewType == 'V')
 			{
 				if(lat.lattice_array[i][j] == 1)
-					printf("*");
+					printf("\u2588"); //dark shade
 				else if(lat.lattice_array[i][j] == 2)
-					printf("\u2588");
+					printf("\u2592"); //medium shade
 				else
 					printf(" ");
 			}
@@ -101,10 +101,13 @@ void init_lattice(int arrlen)
 
 
 /**
- * Frees memory.
- * TO DO 
+ * Frees dynamically allocated memory for storing the lattice.
  */
 void destroy_lattice()
 {
-
+	for(int i = 0; i < lat.len; i++)
+	{
+		free(lat.lattice_array[i]);
+	}
+	free(lat.lattice_array);
 }

@@ -3,7 +3,7 @@
 
 typedef struct lattice {
 	int len;
-	int** lattice_array;
+	std::vector<std::vector<int>> lattice_array;
 } LATTICE;
 
 extern void init_lattice(int l);
