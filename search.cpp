@@ -5,6 +5,12 @@ std::stack<NODE> stack;
 bool percolates = false;
 bool end = false;
 int largest_cluster = 0;
+int cluster_size = 4;
+
+void start_search() {
+	init_lattice(cluster_size);
+	cluster_size *= 2;
+}
 
 void search_lattice() {
 	print_lattice(lat.len,'V');
