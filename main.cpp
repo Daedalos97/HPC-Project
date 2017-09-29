@@ -15,6 +15,23 @@ bool pflag = false;
 bool sflag = false;
 bool bflag = false;
 
+int lat_size = 4;
+
+void start_search() {
+	while (lat_size <= 128) {
+		init_lattice();
+		//Check if we are looking for the site percolation or bond.
+		if (sflag) {
+			seed_lattice_sites(prob);
+		} else {
+			seed_lattice_bonds(prob);
+		}
+		search_lattice();
+		print_lattice(lat.len,'v');
+		lat_size = lat_size * 2;
+	}
+}
+
 //compile project:
 //g++ -std=c++11 -Wall -Werror -pedantic -c  lattice.cpp
 //
@@ -50,18 +67,7 @@ int main(int argc, char** argv)
 		exit(EXIT_FAILURE);
 	}
 
-	init_lattice();
-
-	//Check if we are looking for the site percolation or bond.
-	if (sflag) {
-		seed_lattice_sites(prob);
-	} else {
-		seed_lattice_bonds(prob);
-	}
-
-	search_lattice();
-
-	print_lattice(lat.len,'v');
+	start_search();
 
 	exit(EXIT_SUCCESS);
 }

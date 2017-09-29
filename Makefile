@@ -7,7 +7,7 @@ OBJ = $(LIB_LAT).o
 RM = /bin/rm
 
 main : $(OBJ)
-	$(CPP11) $(CPPFLAGS) -o $(EXENAME) $(LIB_LAT).o main.cpp stack.cpp search.cpp $(LIBFLAGS)
+	$(CPP11) $(CPPFLAGS) -o $(EXENAME) $(LIB_LAT).o main.cpp search.cpp $(LIBFLAGS)
 
 $(OBJ) : $(LIB_LAT).cpp $(LIB_LAT).h
 	$(CPP11) $(CPPFLAGS) -c $(LIB_LAT).cpp $(LIBFLAGS)

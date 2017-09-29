@@ -4,7 +4,6 @@
 #include <ctime>
 
 LATTICE lat;
-int lat_size = 64;
 double prob;
 
 /**
