@@ -111,3 +111,12 @@ void destroy_lattice()
 	}
 	free(lat.lattice_array);
 }
+
+
+/**
+ * Return the lattice array.
+ */
+int** get_lattice_array()
+{
+	return lat.lattice_array;
+}

@@ -15,7 +15,7 @@ RM = /bin/rm
 #---------------------------------------------
 
 main : $(OBJ)
-	$(CPP11) $(CPPFLAGS) -o $(EXE) $(LIB_LAT).o main.cpp $(LIBFLAGS)
+	$(CPP11) $(CPPFLAGS) -o $(EXE) $(OBJ) main.cpp $(LIBFLAGS)
 
 %.o : %.cpp $(HEADERS) 
 	$(CPP11) $(CPPFLAGS) -c $< $(LIBFLAGS)
