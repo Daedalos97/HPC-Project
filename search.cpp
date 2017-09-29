@@ -1,80 +1,91 @@
 #include "search.h"
 
+std::stack<NODE> stack;
+
+bool percolates = false;
+bool end = false;
+int largest_cluster = 0;
+
 void search_lattice() {
-	for (int i = 0; i < lat.len; i++) {
-		i = find_start(i);
-
-		if (check_cluster()) {
-			break;
+	print_lattice(lat.len,'V');
+	int* pos = (int*) malloc(2*sizeof(int));
+	pos[0] = 0, pos[1] = 0;
+	while (!end) {
+		pos = find_cluster(pos);
+		NODE n = {pos[0],pos[1]};
+		printf("%d  %d\n", pos[0],pos[1]);
+		if (check_cluster(n)) {
+			percolates = true;
 		}
 	}
-}
-
-//Allows us to find bonds on th edge of the lattice.
-int find_start(int last_tried) {
-	for (int i = last_tried; i < lat.len; i++) {
-		if (lat.lattice_array[0][i] == 1) {
-			lat.lattice_array[0][i] = 2; //visited.
-			NODE n = {0,i};
-			push(n);
-			return i;
-		}
-		if (lat.lattice_array[i][0] == 1) {
-			lat.lattice_array[i][0] = 2; //visited.
-			NODE n = {i,0};
-			push(n);
-			return i;
-		}
+	if (percolates) {
+		printf("Largest Cluster has %d nodes\n", largest_cluster);
+	} else {
+		printf("Largest Cluster is %d nodes\n", largest_cluster);
 	}
-	return lat.len;
 }
 
 /**
  *	Looks for the starting point of a cluster
  */
 int* find_cluster(int* last_pos) {
-	for (int i = last_pos[0]; i < lat.len-1; i+=2) {
-		for (int j = last_pos[1]; j < lat.len-1; j+=2) {
-			if (lat.lattice_array[i][j] == 1) {
-				lat.lattice_array[i][j] = 2;
-				last_pos[0] = i, last_pos[1] = j;
-				NODE n = {i,j};
-				push(n);
+	for (; last_pos[0] < lat_size; last_pos[0]++) {
+		for (; last_pos[1] < lat_size; last_pos[1] += 2) {
+			if (lat.lattice_array[last_pos[0]][last_pos[1]] == 1) {
+				lat.lattice_array[last_pos[0]][last_pos[1]] = 2;
 				return last_pos;
 			}
 		}
+		last_pos[1] = 0; //stops the column from staying on the last column or past the len of lattice
 	}
+	end = true;
 	last_pos[0] = lat.len; last_pos[1] = lat.len;
 	return last_pos;
 }
 
-void addNode(int i, int j) {
-	NODE n = {i,j};
-	push(n);
-}
-
-bool check_cluster() {
+bool check_cluster(NODE n) {
+	if (n.position[0] == lat.len || n.position[1] == lat.len) return false;
+	int node_sum = 0;
 	int horiz_sum = 0;
 	int verti_sum = 0;
-	int horiz[lat_size];
-	int verti[lat_size]; 
-	while (!is_empty()) {
-		NODE* n = pop();
-
-		int i = n->position[0],j = n->position[1];
-		if (horiz[j] == 0) {
+	int horiz[64] = {0}; //Making fixed sized arrays
+	int verti[64] = {0}; //^
+	stack.push(n);
+	while (!stack.empty()) {
+		NODE n = stack.top();
+		node_sum++;
+		int i = n.position[0],j = n.position[1];
+		stack.pop();
+		if (!horiz[j]) {
 			horiz[j] = 1;
 			horiz_sum++;
 		}
-		if (verti == 0) {
+		if (!verti[i]) {
 			verti[i] = 1;
 			verti_sum++;
 		}
-		if (lat.lattice_array[(i+1)%lat_size][j] == 1) addNode(i+1%lat_size,j);
-		if (lat.lattice_array[i][(j+1)%lat_size] == 1) addNode(i,(j+1)%lat_size);
-		if (lat.lattice_array[(i+lat_size-1)%lat_size][j] == 1) addNode((i+lat_size-1)%lat_size,j);
-		if (lat.lattice_array[i][(j+lat_size-1)%lat_size] == 1) addNode(i, (j+lat_size-1)%lat_size);
+		if (lat.lattice_array[(i+1)%lat_size][j] == 1) {
+			NODE new_node = {(i+1)%lat_size,j};
+			lat.lattice_array[(i+1)%lat_size][j] = 2;
+			stack.push(new_node);
+		}
+		if (lat.lattice_array[i][(j+1)%lat_size] == 1) {
+			NODE new_node = {i,(j+1)%lat_size};
+			lat.lattice_array[i][(j+1)%lat_size] = 2;
+			stack.push(new_node);	
+		}
+		if (lat.lattice_array[(i+lat_size-1)%lat_size][j] == 1) {
+			NODE new_node = {(i+lat_size-1)%lat_size,j};
+			lat.lattice_array[(i+lat_size-1)%lat_size][j] = 2;
+			stack.push(new_node);
+		}
+		if (lat.lattice_array[i][(j+lat_size-1)%lat_size] == 1) {
+		 	NODE new_node = {i, (j+lat_size-1)%lat_size};
+		 	lat.lattice_array[i][(j+lat_size-1)%lat_size] = 2;
+			stack.push(new_node);
+		}
 	}
+	if (node_sum > largest_cluster) largest_cluster = node_sum;
 	if (horiz_sum == lat.len && verti_sum == lat.len) {
 		printf("Percolates Horizontally & Vertically!\n");
 		return true;
@@ -84,7 +95,8 @@ bool check_cluster() {
 	} else if (verti_sum == lat.len) {
 		printf("Percolates Vertically!\n");
 		return true;
+	} else {
+		//printf("%d\t%d\n",horiz_sum,verti_sum);
+		return false;
 	}
-	printf("%d\t%d\n",horiz_sum,verti_sum);
-	return false;
 }

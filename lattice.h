@@ -10,7 +10,7 @@ extern LATTICE lat;
 extern int lat_size;
 extern double prob;
 
-extern void init_lattice(int l);
+extern void init_lattice();
 extern void destroy_lattice();
 extern void print_lattice(int l, char c);
 extern void seed_lattice_sites(double sp);

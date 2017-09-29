@@ -15,8 +15,6 @@ bool pflag = false;
 bool sflag = false;
 bool bflag = false;
 
-bool percolates = false;
-
 //compile project:
 //g++ -std=c++11 -Wall -Werror -pedantic -c  lattice.cpp
 //
@@ -52,7 +50,7 @@ int main(int argc, char** argv)
 		exit(EXIT_FAILURE);
 	}
 
-	init_lattice(64);
+	init_lattice();
 
 	//Check if we are looking for the site percolation or bond.
 	if (sflag) {
@@ -64,12 +62,6 @@ int main(int argc, char** argv)
 	search_lattice();
 
 	print_lattice(lat.len,'v');
-
-	if (percolates) {
-		printf("Percolates at %4.8f\n", prob);
-	} else {
-		printf("Does not percolate\n");
-	}
 
 	exit(EXIT_SUCCESS);
 }

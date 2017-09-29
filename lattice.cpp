@@ -4,7 +4,7 @@
 #include <ctime>
 
 LATTICE lat;
-int lat_size;
+int lat_size = 64;
 double prob;
 
 /**
@@ -41,17 +41,16 @@ void seed_lattice_sites(double prob)
 {
 	//seeding pseudo-random number generator.
 	srand(time(NULL));
-	for(int i = 0; i < lat.len; i++)
-	{
-		for(int j = 0; j < lat.len; j++)
-		{
-			double site_prob = (double)rand()/(double)RAND_MAX;
-			if(site_prob < prob )
-				lat.lattice_array[i][j] = 1;
-			else
-				lat.lattice_array[i][j] = 0;
+	#pragma omp parallel for collapse(2) 
+		for(int i = 0; i < lat.len; i++) {
+			for(int j = 0; j < lat.len; j++) {
+				double site_prob = (double)rand()/(double)RAND_MAX;
+				if(site_prob < prob )
+					lat.lattice_array[i][j] = 1;
+				else
+					lat.lattice_array[i][j] = 0;
+			}
 		}
-	}
 }
 
 
@@ -86,18 +85,17 @@ void seed_lattice_bonds(double prob)
  * Initialize the lattice struct to specified length.
  * Dynamically allocates the array representing the lattice to a specified size.
  */
-void init_lattice(int arrlen)
+void init_lattice()
 {
-	lat_size = arrlen;
-	lat.len = arrlen;
-	if(arrlen <= 1){
-		fprintf(stderr, "%d is an invalid lattice size. Must be greater than 1", arrlen);
+	lat.len = lat_size;
+	if(lat_size <= 1){
+		fprintf(stderr, "%d is an invalid lattice size. Must be greater than 1", lat_size);
 		return;
 	}
-	//dynamically allocate memory for an arrlen*arrlen 2D array.
-	lat.lattice_array = (int**) malloc(arrlen*sizeof(int*));
-	for(int i = 0; i < arrlen; i++){
-		lat.lattice_array[i] = (int*) malloc(arrlen*sizeof(int));
+	//dynamically allocate memory for an lat_size*lat_size 2D array.
+	lat.lattice_array = (int**) malloc(lat_size*sizeof(int*));
+	for(int i = 0; i < lat_size; i++){
+		lat.lattice_array[i] = (int*) malloc(lat_size*sizeof(int));
 	}
 }
 
