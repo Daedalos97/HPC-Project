@@ -4,7 +4,7 @@
 #include <cstdlib>
 #include <ctime>
 
-const double SITEPROB = 0.4;
+const double SITEPROB = 0.5;
 
 //compile project:
 //g++ -std=c++11 -Wall -Werror -pedantic -c  lattice.cpp

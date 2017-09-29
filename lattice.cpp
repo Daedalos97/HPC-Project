@@ -44,7 +44,7 @@ void seed_lattice_sites(double prob)
 		for(int j = 0; j < lat.len; j++)
 		{
 			double site_prob = (double)rand()/(double)RAND_MAX;
-			if(site_prob <= prob )
+			if(site_prob < prob )
 				lat.lattice_array[i][j] = 1;
 			else
 				lat.lattice_array[i][j] = 0;

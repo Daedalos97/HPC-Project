@@ -46,7 +46,12 @@ int* find_cluster(int** graph, int siz, std::stack<NODE> nodestack)
 {
 	int* horiz = (int*)malloc(siz*sizeof(int));
 	int* vert = (int*)malloc(siz*sizeof(int));
-	int nodes = 1; //number of nodes traversed. Could be huge for 2048 sized lattice.
+	for(int i = 0; i < siz; i++)
+	{
+		horiz[i] = 0;
+		vert[i] = 0;
+	}
+	int nodes = 0; //number of nodes traversed. Could be huge for 2048 sized lattice.
 	//std::cout << "node" << std::endl;
 	while(!nodestack.empty())
 	{
@@ -54,8 +59,9 @@ int* find_cluster(int** graph, int siz, std::stack<NODE> nodestack)
 		NODE rootnode = nodestack.top();
 		nodestack.pop();
 		int r = rootnode.row, c = rootnode.col;
-		//std::cout <<"##popped "<< r << " " << c << std::endl;
-		graph[r][c] = 2;
+		std::cout <<"##popped "<< r << " " << c << std::endl;
+		if(graph[r][c] == 1){ graph[r][c] = 2;}
+		nodes+=1;
 		//std::cout << "           " << 1 << std::endl;
 		//std::cout << "       nodes:" << nodes << std::endl;
 		horiz[r] = 1; vert[c] = 1;
@@ -66,37 +72,33 @@ int* find_cluster(int** graph, int siz, std::stack<NODE> nodestack)
 			//std::cout << "**" << (r+1)%siz << " " << c << std::endl;
 			NODE downnode = {(r+1)%siz, c};
 			graph[(r+1)%siz][c] = 2;
-			//std::cout << "**pushed [down neighbour]" << (r+1)%siz << " " << c << std::endl;
+			std::cout << "**pushed [down neighbour]" << (r+1)%siz << " " << c << std::endl;
 			nodestack.push(downnode);
-			nodes+=1;
 		}
 		//std::cout << "-------------UP" << modulo(r-1, siz)<< " " << c << std::endl;
 		if(graph[modulo((r-1),siz)][c] == 1){
 			//std::cout << "**" << modulo(r-1, siz) << " " << c << std::endl;
 			NODE upnode = {modulo(r-1, siz), c};
 			graph[modulo((r-1),siz)][c] = 2;
-			//std::cout << "**pushed [up neighbour]" << modulo(r-1, siz)<< " " << c << std::endl;
+			std::cout << "**pushed [up neighbour]" << modulo(r-1, siz)<< " " << c << std::endl;
 			nodestack.push(upnode);
-			nodes+=1;
 		}
 		//std::cout << "-------------LEFT" << r << " " <<modulo(c-1,siz) << " " <<std::endl;
 		if(graph[r][modulo((c-1),siz)] == 1){
 			NODE leftnode = {r, modulo(c-1, siz)};
 			graph[r][modulo((c-1),siz)] = 2;
-			//std::cout << "**pushed [left neighbour]" << r << " " <<modulo(c-1,siz) << " " <<std::endl;
+			std::cout << "**pushed [left neighbour]" << r << " " <<modulo(c-1,siz) << " " <<std::endl;
 			nodestack.push(leftnode);
-			nodes+=1;
 		}
 		//std::cout<< "---------------RIGHT" << r << " " << (c+1)%siz << " " << std::endl;
 		if(graph[r][(c+1)%siz] == 1){
 			NODE rightnode = {r, (c+1)%siz};
 			graph[r][(c+1)%siz] = 2;
-			//std::cout<< "**pushed [right neighbour]" << r << " " << (c+1)%siz << " " << std::endl;
+			std::cout<< "**pushed [right neighbour]" << r << " " << (c+1)%siz << " " << std::endl;
 			nodestack.push(rightnode);
-			nodes+=1;
 		}
 	}
-	//std::cout << "fin" << std::endl;
+	std::cout << "fin_ " << nodestack.size() << std::endl;
 	int perc = find_percolation(horiz, vert, siz);
 	int* outarr = (int*)malloc(2*sizeof(int));
 	outarr[0] = perc; outarr[1] = nodes;
@@ -127,8 +129,11 @@ void perform_depth_first_search(int** lattice, int siz)
 			if(lattice[r][c] == 1)
 			{
 				NODE root = {r,c};
+				s = std::stack<NODE>();
+				std::cout << "--init_stack_size-- " << s.size() << std::endl;
 				s.push(root);
 				clusterstat = find_cluster(lattice, siz, s);
+				print_lattice(siz, 'v');
 				//percolation found.
 				if(clusterstat[0] != -1){
 					percolation = true;
