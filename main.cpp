@@ -16,7 +16,7 @@ bool sflag = false;
 bool bflag = false;
 bool percflag = false;
 
-int lat_size = 4096;
+int lat_size = 4;
 
 void start_search() {
 	//while (lat_size <= 256) {

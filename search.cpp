@@ -81,6 +81,8 @@ void get_neighbours(int i, int j, std::vector<NODE>* v) {
 //Recursive Parallelisation of the Stack
 void explore(NODE n) {
 	int i = n.position[0], j = n.position[1];
+	#pragma omp atomic
+		node_sum++;
 	#pragma omp critical
 	{
 		if (horiz.at(j) == 0) {
@@ -93,8 +95,6 @@ void explore(NODE n) {
 	std::vector<NODE> neighbours (0);
 	get_neighbours(i, j, &neighbours);
 	for (int k = 0; k < (int)neighbours.size(); k++) {
-		#pragma omp atomic
-			node_sum++;
 		#pragma omp task 
 		{
 			explore(neighbours.at(k));
