@@ -10,6 +10,7 @@ typedef struct node {
 } NODE;
 
 extern std::stack<NODE> stack;
+extern int perc_type;
 
 void search_lattice();
 int find_start(int i);
