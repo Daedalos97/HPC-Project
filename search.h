@@ -14,4 +14,6 @@ extern std::stack<NODE> stack;
 void search_lattice();
 int find_start(int i);
 int* find_cluster(int* pos);
+int* find_cluster_bonds(int* pos);
 bool check_cluster(NODE n);
+bool check_cluster_bonds(NODE n);

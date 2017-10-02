@@ -1,9 +1,18 @@
+#include <stdbool.h>
+
 #ifndef LATTICE_H_INCLUDED
 #define LATTICE_H_INCLUDED
 
+extern bool bflag;
+
+typedef struct bond {
+	unsigned char left:2,up:2,right:2,down:2;
+} BOND;
+
 typedef struct lattice {
 	int len;
-	int** lattice_array;
+	char** lattice_array;
+	BOND** bond_array;
 } LATTICE;
 
 extern LATTICE lat;

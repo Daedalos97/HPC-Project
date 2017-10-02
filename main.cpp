@@ -18,7 +18,7 @@ bool bflag = false;
 int lat_size = 4;
 
 void start_search() {
-	while (lat_size <= 256) {
+	//while (lat_size <= 256) {
 		init_lattice();
 		//Check if we are looking for the site percolation or bond.
 		if (sflag) {
@@ -28,8 +28,8 @@ void start_search() {
 		}
 		search_lattice();
 		print_lattice(lat.len,'v');
-		lat_size = lat_size * 2;
-	}
+		//lat_size = lat_size * 2;
+	//}
 }
 
 //compile project:
