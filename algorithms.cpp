@@ -133,7 +133,7 @@ void perform_depth_first_search(int** lattice, int siz)
 				std::cout << "--init_stack_size-- " << s.size() << std::endl;
 				s.push(root);
 				clusterstat = find_cluster(lattice, siz, s);
-				print_lattice(siz, 'v');
+				//print_lattice(siz, 'v');
 				//percolation found.
 				if(clusterstat[0] != -1){
 					percolation = true;
