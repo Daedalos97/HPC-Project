@@ -93,9 +93,9 @@ void init_lattice(int arrlen)
 		return;
 	}
 	//dynamically allocate memory for an arrlen*arrlen 2D array.
-	lat.lattice_array = (int**) malloc(arrlen*sizeof(int*));
+	lat.lattice_array = (char**) malloc(arrlen*sizeof(int*));
 	for(int i = 0; i < arrlen; i++){
-		lat.lattice_array[i] = (int*) malloc(arrlen*sizeof(int));
+		lat.lattice_array[i] = (char*) malloc(arrlen*sizeof(int));
 	}
 }
 
@@ -116,7 +116,7 @@ void destroy_lattice()
 /**
  * Return the lattice array.
  */
-int** get_lattice_array()
+char** get_lattice_array()
 {
 	return lat.lattice_array;
 }

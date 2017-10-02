@@ -42,7 +42,7 @@ int find_percolation(int* h, int* v, int s)
  * and 2 if both horizontal and vertically percolating.
  * The second integer contains the number of sites that are in the cluster returned.
  */
-int* find_cluster(int** graph, int siz, std::stack<NODE> nodestack)
+int* find_cluster(char** graph, int siz, std::stack<NODE> nodestack)
 {
 	int* horiz = (int*)malloc(siz*sizeof(int));
 	int* vert = (int*)malloc(siz*sizeof(int));
@@ -59,7 +59,7 @@ int* find_cluster(int** graph, int siz, std::stack<NODE> nodestack)
 		NODE rootnode = nodestack.top();
 		nodestack.pop();
 		int r = rootnode.row, c = rootnode.col;
-		std::cout <<"##popped "<< r << " " << c << std::endl;
+		//std::cout <<"##popped "<< r << " " << c << std::endl;
 		if(graph[r][c] == 1){ graph[r][c] = 2;}
 		nodes+=1;
 		//std::cout << "           " << 1 << std::endl;
@@ -72,7 +72,7 @@ int* find_cluster(int** graph, int siz, std::stack<NODE> nodestack)
 			//std::cout << "**" << (r+1)%siz << " " << c << std::endl;
 			NODE downnode = {(r+1)%siz, c};
 			graph[(r+1)%siz][c] = 2;
-			std::cout << "**pushed [down neighbour]" << (r+1)%siz << " " << c << std::endl;
+			//std::cout << "**pushed [down neighbour]" << (r+1)%siz << " " << c << std::endl;
 			nodestack.push(downnode);
 		}
 		//std::cout << "-------------UP" << modulo(r-1, siz)<< " " << c << std::endl;
@@ -80,25 +80,25 @@ int* find_cluster(int** graph, int siz, std::stack<NODE> nodestack)
 			//std::cout << "**" << modulo(r-1, siz) << " " << c << std::endl;
 			NODE upnode = {modulo(r-1, siz), c};
 			graph[modulo((r-1),siz)][c] = 2;
-			std::cout << "**pushed [up neighbour]" << modulo(r-1, siz)<< " " << c << std::endl;
+			//std::cout << "**pushed [up neighbour]" << modulo(r-1, siz)<< " " << c << std::endl;
 			nodestack.push(upnode);
 		}
 		//std::cout << "-------------LEFT" << r << " " <<modulo(c-1,siz) << " " <<std::endl;
 		if(graph[r][modulo((c-1),siz)] == 1){
 			NODE leftnode = {r, modulo(c-1, siz)};
 			graph[r][modulo((c-1),siz)] = 2;
-			std::cout << "**pushed [left neighbour]" << r << " " <<modulo(c-1,siz) << " " <<std::endl;
+			//std::cout << "**pushed [left neighbour]" << r << " " <<modulo(c-1,siz) << " " <<std::endl;
 			nodestack.push(leftnode);
 		}
 		//std::cout<< "---------------RIGHT" << r << " " << (c+1)%siz << " " << std::endl;
 		if(graph[r][(c+1)%siz] == 1){
 			NODE rightnode = {r, (c+1)%siz};
 			graph[r][(c+1)%siz] = 2;
-			std::cout<< "**pushed [right neighbour]" << r << " " << (c+1)%siz << " " << std::endl;
+			//std::cout<< "**pushed [right neighbour]" << r << " " << (c+1)%siz << " " << std::endl;
 			nodestack.push(rightnode);
 		}
 	}
-	std::cout << "fin_ " << nodestack.size() << std::endl;
+	//std::cout << "fin_ " << nodestack.size() << std::endl;
 	int perc = find_percolation(horiz, vert, siz);
 	int* outarr = (int*)malloc(2*sizeof(int));
 	outarr[0] = perc; outarr[1] = nodes;
@@ -113,7 +113,7 @@ int* find_cluster(int** graph, int siz, std::stack<NODE> nodestack)
  * Must initialize array size by calling init_alg_array_size before calling
  * this function.
  */
-void perform_depth_first_search(int** lattice, int siz)
+void perform_depth_first_search(char** lattice, int siz)
 {
 	int* clusterstat;
 	bool percolation = false;
@@ -130,7 +130,7 @@ void perform_depth_first_search(int** lattice, int siz)
 			{
 				NODE root = {r,c};
 				s = std::stack<NODE>();
-				std::cout << "--init_stack_size-- " << s.size() << std::endl;
+				//std::cout << "--init_stack_size-- " << s.size() << std::endl;
 				s.push(root);
 				clusterstat = find_cluster(lattice, siz, s);
 				//print_lattice(siz, 'v');

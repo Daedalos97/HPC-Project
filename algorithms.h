@@ -13,6 +13,7 @@ typedef struct node{
 	int col;
 } NODE;
 
-extern void perform_depth_first_search(int** l, int s);
+extern void perform_depth_first_search(char** l, int s);
+extern void perform_union_find(char** l, int s);
 
 #endif
