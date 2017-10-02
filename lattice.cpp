@@ -37,7 +37,7 @@ void print_lattice(int len, char viewType)
 			for (int j = 0; j < len; j++) {
 				if(viewType == 'v' || viewType == 'V') {
 					BOND b = lat.bond_array[i][j];
-					if (b.left == 2 || b.up == 2 || b.right == 2 || b.down == 2) printf("\u2588");
+					if (lat.lattice_array[i][j] == 2) printf("\u2588");
 					else if (b.left == 1 || b.up == 1 || b.right == 1 || b.down == 1) printf("*");
 					else printf(" ");
 				} else printf("%i", 0);
@@ -77,6 +77,7 @@ void seed_lattice_bonds(double prob)
 	{
 		for(int j = 0; j < lat.len; j++)
 		{
+			lat.lattice_array[i][j] = 1;
 			double bond_prob = (double)rand()/(double)RAND_MAX;
 			if(bond_prob < prob)
 			{
@@ -100,24 +101,21 @@ void seed_lattice_bonds(double prob)
  */
 void init_lattice()
 {
-	if (!bflag) {
-		lat.len = lat_size;
+	lat.len = lat_size;
+	if(lat_size <= 1){
+		fprintf(stderr, "%d is an invalid lattice size. Must be greater than 1", lat_size);
+		return;
+	}
+	//dynamically allocate memory for an lat_size*lat_size 2D array.
+	lat.lattice_array = (char**) malloc(lat_size*sizeof(char*));
+	for(int i = 0; i < lat_size; i++){
+		lat.lattice_array[i] = (char*) malloc(lat_size*sizeof(char));
+	}
+	if (bflag) {
 		if(lat_size <= 1){
 			fprintf(stderr, "%d is an invalid lattice size. Must be greater than 1", lat_size);
 			return;
 		}
-		//dynamically allocate memory for an lat_size*lat_size 2D array.
-		lat.lattice_array = (char**) malloc(lat_size*sizeof(char*));
-		for(int i = 0; i < lat_size; i++){
-			lat.lattice_array[i] = (char*) malloc(lat_size*sizeof(char));
-		}
-	} else {
-		lat.len = lat_size;
-		if(lat_size <= 1){
-			fprintf(stderr, "%d is an invalid lattice size. Must be greater than 1", lat_size);
-			return;
-		}
-		//dynamically allocate memory for an lat_size*lat_size 2D array.
 		lat.bond_array = (BOND**) malloc(lat_size*sizeof(BOND*));
 		for(int i = 0; i < lat_size; i++){
 			lat.bond_array[i] = (BOND*) malloc(lat_size*sizeof(BOND));

@@ -138,14 +138,9 @@ bool check_cluster(NODE n) {
 	}
 }
 
-bool has_been_visited(NODE n) {
-	BOND b = lat.bond_array[n.position[0]][n.position[1]];
-	return (b.left == 2 || b.up == 2 || b.right == 2 || b.down == 2);
-}
-
 bool check_cluster_bonds(NODE n) {
 	if (n.position[0] == lat.len || n.position[1] == lat.len) return false;
-	int node_sum = 0;
+	int node_sum = 1;
 	int horiz_sum = 0;
 	int verti_sum = 0;
 	std::vector<int> horiz (lat.len);
@@ -153,12 +148,9 @@ bool check_cluster_bonds(NODE n) {
 	stack.push(n);
 	while (!stack.empty()) {
 		NODE n = stack.top();
-		if (!has_been_visited(n)) {
-			printf("YES\n");
-			node_sum++;
-		}
-
+		node_sum++;
 		int i = n.position[0],j = n.position[1];
+		lat.lattice_array[i][j] = 2;
 		stack.pop();
 		if (!horiz.at(j)) {
 			horiz.at(j) = 1;
@@ -168,24 +160,24 @@ bool check_cluster_bonds(NODE n) {
 			verti.at(i) = 1;
 			verti_sum++;
 		}
-		if (lat.bond_array[i][j].down == 1) {
+		if ((lat.bond_array[i][j].down == 1) && (lat.lattice_array[(i+1)%lat_size][j] != 2)) {
 			NODE new_node = {(i+1)%lat_size,j};
-			lat.bond_array[i][j].down = 2;
+			lat.lattice_array[(i+1)%lat_size][j] = 2;
 			stack.push(new_node);
 		}
-		if (lat.bond_array[i][j].left == 1) {
+		if ((lat.bond_array[i][j].left == 1) && (lat.lattice_array[i][(j+1)%lat_size] != 2)) {
 			NODE new_node = {i,(j+1)%lat_size};
-			lat.bond_array[i][j].left = 2;
+			lat.lattice_array[i][(j+1)%lat_size] = 2;
 			stack.push(new_node);	
 		}
-		if (lat.bond_array[i][j].up == 1) {
+		if ((lat.bond_array[i][j].up == 1) && (lat.lattice_array[(i+lat_size-1)%lat_size][j] != 2)) {
 			NODE new_node = {(i+lat_size-1)%lat_size,j};
-			lat.bond_array[i][j].up = 2;
+			lat.lattice_array[(i+lat_size-1)%lat_size][j] = 2;
 			stack.push(new_node);
 		}
-		if (lat.bond_array[i][j].right == 1) {
+		if ((lat.bond_array[i][j].right == 1) && (lat.lattice_array[i][(j+lat_size-1)%lat_size] != 2)) {
 		 	NODE new_node = {i, (j+lat_size-1)%lat_size};
-			lat.bond_array[i][j].right = 2;
+		 	lat.lattice_array[i][(j+lat_size-1)%lat_size] = 2;
 			stack.push(new_node);
 		}
 	}
