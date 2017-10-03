@@ -40,7 +40,7 @@ void search_lattice() {
  */
 int* find_cluster(int* last_pos) {
 	for (; last_pos[0] < lat_size; last_pos[0]++) {
-		for (; last_pos[1] < lat_size; last_pos[1]++) {
+		for (; last_pos[1] < lat_size; last_pos[1]+= 2) {
 			if (bflag) {
 				if (lat.bond_array[last_pos[0]][last_pos[1]].visited == 1) {
 					lat.bond_array[last_pos[0]][last_pos[1]].visited = 2;
@@ -131,7 +131,6 @@ bool check_cluster_bonds(NODE n) {
 		node_sum++;
 		int i = n.position[0],j = n.position[1];
 		BOND b = lat.bond_array[i][j];
-		printf("%d %d\n",i,j);
 		stack.pop();
 		if (!horiz.at(j)) {
 			horiz.at(j) = 1;
