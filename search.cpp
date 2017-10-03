@@ -14,6 +14,7 @@ int horiz_sum;
 int verti_sum;
 std::vector<int> horiz;
 std::vector<int> verti;
+int** array = lat.lattice_array;
 
 void search_lattice() {
 	int* pos = (int*) malloc(2*sizeof(int));
@@ -55,25 +56,25 @@ int* find_cluster(int* last_pos) {
 void get_neighbours(int i, int j, std::vector<NODE>* v) {
 	#pragma omp critical
 	{
-		if (lat.lattice_array[(i+1)%lat_size][j] == 1) {
+		if (array[(i+1)%lat_size][j] == 1) {
 			NODE new_node = {(i+1)%lat_size,j};
 			v->push_back(new_node);
-			lat.lattice_array[(i+1)%lat_size][j] = 2;
+			array[(i+1)%lat_size][j] = 2;
 		}
-		if (lat.lattice_array[i][(j+1)%lat_size] == 1) {
+		if (array[i][(j+1)%lat_size] == 1) {
 			NODE new_node = {i,(j+1)%lat_size};
 			v->push_back(new_node);
-			lat.lattice_array[i][(j+1)%lat_size] = 2;
+			array[i][(j+1)%lat_size] = 2;
 		}
-		if (lat.lattice_array[(i+lat_size-1)%lat_size][j] == 1) {
+		if (array[(i+lat_size-1)%lat_size][j] == 1) {
 			NODE new_node = {(i+lat_size-1)%lat_size,j};
 			v->push_back(new_node);
-			lat.lattice_array[(i+lat_size-1)%lat_size][j] = 2;
+			array[(i+lat_size-1)%lat_size][j] = 2;
 		}
-		if (lat.lattice_array[i][(j+lat_size-1)%lat_size] == 1) {
+		if (array[i][(j+lat_size-1)%lat_size] == 1) {
 		 	NODE new_node = {i, (j+lat_size-1)%lat_size};
 		 	v->push_back(new_node);
-		 	lat.lattice_array[i][(j+lat_size-1)%lat_size] = 2;
+		 	array[i][(j+lat_size-1)%lat_size] = 2;
 		}
 	}
 }
@@ -81,16 +82,11 @@ void get_neighbours(int i, int j, std::vector<NODE>* v) {
 //Recursive Parallelisation of the Stack
 void explore(NODE n) {
 	int i = n.position[0], j = n.position[1];
-	#pragma omp atomic
-		node_sum++;
-	#pragma omp critical
-	{
-		if (horiz.at(j) == 0) {
-			horiz.at(j) = 1;
-		}
-		if (verti.at(i) == 0) {
-			verti.at(i) = 1;
-		}
+	if (horiz.at(j) == 0) {
+		horiz.at(j) = 1;
+	}
+	if (verti.at(i) == 0) {
+		verti.at(i) = 1;
 	}
 	std::vector<NODE> neighbours (0);
 	get_neighbours(i, j, &neighbours);
@@ -111,7 +107,7 @@ bool check_cluster(NODE n) {
 	horiz.resize(lat.len);
 	verti.clear();
 	verti.resize(lat.len);
-	#pragma omp parallel
+	#pragma omp parallel shared(array) reduction(+:node_sum)
 	{
 		#pragma omp single
 		{
@@ -122,12 +118,10 @@ bool check_cluster(NODE n) {
 	#pragma omp parallel for reduction(+:horiz_sum,verti_sum)
 		for (i = 0; i < lat.len; i++) {
 			if (horiz.at(i)) {
-				#pragma omp atomic
-					horiz_sum++;
+				horiz_sum++;
 			}
 			if (verti.at(i)) {
-				#pragma omp atomic
-					verti_sum++;
+				verti_sum++;
 			}
 		}
 
