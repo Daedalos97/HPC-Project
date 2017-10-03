@@ -10,12 +10,38 @@
 #include <getopt.h>
 #include <ctype.h>
 
-#define OPTLIST "p:sb"
+#define OPTLIST "p:l:sb"
 bool pflag = false;
 bool sflag = false;
 bool bflag = false;
+bool lflag = false;
+int matchtype = 2;
 
 int lat_size = 2048;
+
+
+
+/**
+ * Incase of invalid command line input from user, print usage.
+ */
+void print_usage()
+{
+	FILE* fp;
+	fp = fopen(".usage.in", "r");
+	if(fp == NULL)
+	{
+		fprintf(stderr, "ERROR! Could not print usage\n");
+		exit(1);
+	}
+
+	char c = fgetc(fp);
+	while(c != EOF)
+	{
+		fprintf(stderr, "%c", c);
+		c = fgetc(fp);
+	}
+	fclose(fp);
+}
 
 void start_search() {
 	//while (lat_size <= 256) {
@@ -39,14 +65,26 @@ void start_search() {
 int main(int argc, char** argv)
 {
 	int opt;
+	int lsiz;
 	while ((opt = getopt(argc,argv,OPTLIST)) != -1) {
 		switch (opt) {
-			case 'p': 
+			case 'p':
 				if (isdigit(optarg[0])) {
 					prob = strtod(optarg,NULL);
 					pflag = true;
 				} else {
 					fprintf(stderr, "Invalid probability argument.\n");
+					print_usage();
+					exit(EXIT_FAILURE);
+				}
+				break;
+			case 'l':
+				if (isdigit(optarg[0])){
+					lsiz = atoi(optarg);
+					lflag = true;
+				} else {
+					fprintf(stderr, "Invalid lattice size.\n");
+					print_usage();
 					exit(EXIT_FAILURE);
 				}
 				break;
@@ -56,17 +94,21 @@ int main(int argc, char** argv)
 			case 'b':
 				bflag = true;
 				break;
-			case '?': fprintf(stderr, "Invalid command.\n"); exit(EXIT_FAILURE);
+			case '?': fprintf(stderr, "Invalid command.\n"); print_usage(); exit(EXIT_FAILURE);
 		}
 	}
 	if (sflag == bflag) {
 		fprintf(stderr, "You need only one -s or -b flag for either site or bond percolation.\n");
+		print_usage();
 		exit(EXIT_FAILURE);
 	} else if (!pflag) {
 		fprintf(stderr, "No percolation probability given.\n");
+		print_usage();
 		exit(EXIT_FAILURE);
 	}
 
+	if(lflag)
+		lat_size = lsiz;
 	start_search();
 
 	exit(EXIT_SUCCESS);

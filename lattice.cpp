@@ -1,15 +1,12 @@
 #include "lattice.h"
-#include <cstdio>
-#include <cstdlib>
-#include <ctime>
 
 LATTICE lat;
 double prob;
-
+int lat_siz;
 /**
- * Prints the existing lattice, takes the length of the 2D array 
- * as argument. If 'v' is passed in as print type a visual representation is 
- * provided, any other character defaults to 1s and 0s. 
+ * Prints the existing lattice, takes the length of the 2D array
+ * as argument. If 'v' is passed in as print type a visual representation is
+ * provided, any other character defaults to 1s and 0s.
  */
 void print_lattice(int len, char viewType)
 {
@@ -54,7 +51,7 @@ void seed_lattice_sites(double prob)
 {
 	//seeding pseudo-random number generator.
 	srand(time(NULL));
-	#pragma omp parallel for collapse(2) 
+	#pragma omp parallel for collapse(2)
 		for(int i = 0; i < lat.len; i++) {
 			for(int j = 0; j < lat.len; j++) {
 				double site_prob = (double)rand()/(double)RAND_MAX;
@@ -127,7 +124,7 @@ void init_lattice()
 
 /**
  * Frees memory.
- * TO DO 
+ * TO DO
  */
 void destroy_lattice()
 {
