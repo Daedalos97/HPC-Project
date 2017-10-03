@@ -4,7 +4,7 @@
 #include <vector>
 
 int perc_type;
-int largest_cluster = 0;
+int largest_cluster;
 
 void search_lattice() {
 	bool percolates = false;
@@ -20,77 +20,83 @@ void search_lattice() {
 
 //Paralelised DFS using multiple threads hopefully no errors
 bool check_cluster() {
-	int k;
-	int node_sum;
-	int horiz_sum;
-	int verti_sum;
-	#pragma omp parallel for shared(largest_cluster) private(node_sum,verti_sum,horiz_sum)
-		for (k = 0; k < lat_size; k++) {
-			for (int l = 0; l < lat_size; l++) {
-				if (lat.lattice_array[k][l] == 1) {
-					std::vector<int> horiz (lat_size);
-					std::vector<int> verti (lat_size);
-					std::stack<NODE> stack;
-					NODE n = {k,l};
-					lat.lattice_array[k][l] = 2;
-					stack.push(n);
+	largest_cluster = 0;
+	char stop = 1;
+	std::stack<NODE> S;
+	int k,l;
+	#pragma omp parallel num_threads(16) shared(largest_cluster) firstprivate(S)
+		#pragma omp for
+			for (k = 0; k < lat_size; k++) {
+				for (l = 0; l < lat_size; l++) {
+					if (lat.lattice_array[k][l] == 1 && stop) {
+						char* horiz = (char*) malloc(lat_size*sizeof(char));
+						char* verti = (char*) malloc(lat_size*sizeof(char));
+						NODE n = {k,l};
+						S.push(n);
 
-					while (!stack.empty()) {
-						NODE new_node = stack.top();
-						int i = new_node.position[0], j = new_node.position[1];
-						horiz.at(i) = 1;
-						verti.at(j) = 1;
-						stack.pop();
-						node_sum++;
+						lat.lattice_array[k][l] = 2;
 
-						if (lat.lattice_array[(i+lat_size-1)%lat_size][j]) {
-							lat.lattice_array[(i+lat_size-1)%lat_size][j] = 2;
-							NODE neigh = {(i+lat_size-1)%lat_size,j};
-							stack.push(neigh);
+						int node_sum = 0;
+						int horiz_sum = 0;
+						int verti_sum = 0;
+
+						while (!S.empty() && stop) {
+							node_sum++;
+							NODE new_node = S.top();
+							int i = new_node.position[0], j = new_node.position[1];
+							horiz[i] = 1;
+							verti[j] = 1;
+							S.pop();
+
+							if (lat.lattice_array[(i+lat_size-1)%lat_size][j] == 1) {
+								lat.lattice_array[(i+lat_size-1)%lat_size][j] = 2;
+								NODE neigh = {(i+lat_size-1)%lat_size,j};
+								S.push(neigh);
+							}
+							if (lat.lattice_array[i][(j+lat_size-1)%lat_size] == 1) {
+								lat.lattice_array[i][(j+lat_size-1)%lat_size] = 2;
+								NODE neigh = {i,(j+lat_size-1)%lat_size};
+								S.push(neigh);
+							}
+							if (lat.lattice_array[i][(j+1)%lat_size] == 1) {
+								lat.lattice_array[i][(j+1)%lat_size] = 2;
+								NODE neigh = {i,(j+1)%lat_size};
+								S.push(neigh);
+							}
+							if (lat.lattice_array[(i+1)%lat_size][j] == 1) {
+								lat.lattice_array[(i+1)%lat_size][j] = 2;
+								NODE neigh = {(i+1)%lat_size,j};
+								S.push(neigh);	
+							}
+							
 						}
-						if (lat.lattice_array[i][(j+lat_size-1)%lat_size]) {
-							lat.lattice_array[i][(j+lat_size-1)%lat_size] = 2;
-							NODE neigh = {i,(j+lat_size-1)%lat_size};
-							stack.push(neigh);
+						for (int j = 0; j < lat.len; j++) {
+							if (horiz[j]) {
+								horiz_sum++;
+							}
+							if (verti[j]) {
+								verti_sum++;
+							}
 						}
-						if (lat.lattice_array[i][(j+1)%lat_size]) {
-							lat.lattice_array[i][(j+1)%lat_size] = 2;
-							NODE neigh = {i,(j+1)%lat_size};
-							stack.push(neigh);
-						}
-						if (lat.lattice_array[(i+1)%lat_size][j]) {
-							lat.lattice_array[(i+1)%lat_size][j] = 2;
-							NODE neigh = {(i+1)%lat_size,j};
-							stack.push(neigh);	
-						}
-						
-					}
-					for (int j = 0; j < lat.len; j++) {
-						if (horiz.at(j)) {
-							horiz_sum++;
-						}
-						if (verti.at(j)) {
-							verti_sum++;
-						}
-					}
-				
-					if (horiz_sum == lat.len && verti_sum == lat.len && perc_type == 2) {
-						printf("Percolates Horizontally & Vertically!\n");
-						k = lat_size;
-					} else if (horiz_sum == lat.len && perc_type == 1) {
-						printf("Percolates Horizontally!\n");
-						k = lat_size;
-					} else if (verti_sum == lat.len && perc_type == 0) {
-						printf("\nPercolates Vertically!\n");
-						k = lat_size;
-					} else {
-						#pragma omp critical
+						#pragma omp critical 
 						{
-							if (node_sum > largest_cluster) largest_cluster = node_sum;
+							if (node_sum > largest_cluster) {
+								largest_cluster = node_sum;
+								printf("%d\n", largest_cluster);
+							}
+							if (horiz_sum == lat_size && verti_sum == lat_size && perc_type == 2) {
+								printf("Percolates Horizontally & Vertically!\n");
+								stop = 0;
+							} else if (horiz_sum == lat_size && perc_type == 1) {
+								printf("Percolates Horizontally!\n");
+								stop = 0;
+							} else if (verti_sum == lat_size && perc_type == 0) {
+								printf("\nPercolates Vertically!\n");
+								stop = 0;
+							}
 						}
 					}
 				}
 			}
-		}
 	return false;
 }

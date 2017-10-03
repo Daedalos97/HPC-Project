@@ -16,7 +16,7 @@ bool sflag = false;
 bool bflag = false;
 bool percflag = false;
 
-int lat_size = 4;
+int lat_size = 6000;
 
 void start_search() {
 	//while (lat_size <= 256) {
@@ -28,7 +28,7 @@ void start_search() {
 			seed_lattice_bonds(prob);
 		}
 		search_lattice();
-		print_lattice(lat.len,'v');
+		//print_lattice(lat.len,'v');
 		//lat_size = lat_size * 2;
 	//}
 }
