@@ -1,3 +1,6 @@
+#ifndef SEARCH_H_INCLUDED
+#define SEARCH_H_INCLUDED
+
 #include "lattice.h"
 
 #include <stdlib.h>
@@ -17,3 +20,5 @@ int* find_cluster(int* pos);
 int* find_cluster_bonds(int* pos);
 bool check_cluster(NODE n);
 bool check_cluster_bonds(NODE n);
+
+#endif
