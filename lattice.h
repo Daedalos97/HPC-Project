@@ -6,7 +6,7 @@
 extern bool bflag;
 
 typedef struct bond {
-	unsigned char left:2,up:2,right:2,down:2;
+	unsigned char left:1,up:1,right:1,down:1,visited:2; //Uses 6 bits out of the 8
 } BOND;
 
 typedef struct lattice {
