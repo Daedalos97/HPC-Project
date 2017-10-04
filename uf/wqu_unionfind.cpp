@@ -1,4 +1,5 @@
 #include "wqu_unionfind.h"
+#include "lattice.h"
 /**
  * An implementation of the Hoshen-Kopelman algorithm for labelling clusters
  * on a grid, based on a (Weighted, Quick Union) Union-Find algorithm.
@@ -11,12 +12,8 @@
 
 int* parentId; //contains the index of the parent
 int* subtreeSize;  //the size of the subtree from a node.
-// bool row_perc_found;
-// bool col_perc_found;
 std::vector<int> perc_label; //labels that might be assigned to a percolating cluster.
 int len; //stores the size of the lattice.
-//std::map<int, int*> horiz_percol_map; // keeps an array for storing all the horiz. index.
-//std::map<int, int*> vert_percol_map; // keeps an array for storing all the vertical index.
 
 
 /**
@@ -133,14 +130,6 @@ int twoDto1D(int i, int j, int siz)
 }
 
 /**
-*
-*/
-// int vertical_percol_find()
-// {
-//
-// }
-
-/**
 * Updates the values of the matrix to label each individual cluster within it.
 * must be called before calling vertical_percol_find and horizontal_perc_find.
 * must be called after perform_union_find
@@ -195,6 +184,8 @@ bool find_vertical_percolation(int** l, int siz)
 				break;
 		}
 	}
+	if(!row_perc_found){printf("[X] does NOT percolate across all cols!\n");}
+	else{printf("[\u2714] percolates across all cols!\n");}
 	return row_perc_found;
 }
 
@@ -221,9 +212,31 @@ bool find_horizontal_percolation(int** l, int siz)
 				break;
 		}
 	}
+	if(!col_perc_found){printf("[X] does NOT percolate across all rows!\n");}
+	else{printf("[\u2714] percolates across all rows!\n");}
 	return col_perc_found;
 }
 
+
+/**
+* We construct a vector which contains all the cluster labels that are
+* assigned to clusters which can result in a percolation.
+* We ignore repeats in this vector.
+*/
+void populate_percolation_label_vector(int latsiz)
+{
+	for(int z = 0; z < len; z++)
+	{
+		if(subtreeSize[z] > latsiz)
+		{
+			int cluster_label = find(z);
+			if(!check_if_exists_in_perc_label(cluster_label))
+			{
+				perc_label.push_back(cluster_label);
+			}
+		}
+	}
+}
 
 /**
 * Perform union find to connect the sites into a Union Find search tree.
@@ -238,47 +251,50 @@ int perform_union_find(int** lattice, int latsiz)
 		{
 			if(lattice[i][j] ==1)
 			{
-				// if(i == 0)
-				// 	quick_union(top, twoDto1D(i, j, latsiz)); //connect to virtual top.
-				// if(i == latsiz-1)
-				// 	quick_union(twoDto1D(i, j, latsiz), bottom); //connect to virtual bottom.
-
+				//look up.
 				if(lattice[modulo(i-1, latsiz)][j] == 1)
-				{
 					quick_union(twoDto1D(modulo(i-1,latsiz), j, latsiz), twoDto1D(i, j, latsiz));
-				}
-
-
 				//look left.
 				if(lattice[i][modulo(j-1, latsiz)] == 1)
-				{
 					quick_union(twoDto1D(i, modulo(j-1, latsiz), latsiz), twoDto1D(i, j, latsiz));
-				}
 			}
 		}
 	}
-	//print_array_parentid();
-	//print_array_subtrees();
-	// print_array_rows();
-	// print_array_cols();
-	for(int z = 0; z < len; z++)
-	{
-		if(subtreeSize[z] > latsiz)
-		{
-			//int* horiz_array = (int*)malloc(latsiz*sizeof(int));
-			//int* vert_array = (int*)malloc(latsiz*sizeof(int));
-			int cluster_label = find(z);
-			//printf("%d %zu\n", cluster_label, perc_label.size());
-			if(!check_if_exists_in_perc_label(cluster_label))
-			{
-				//printf("----pushed : %d %zu\n", find(z), perc_label.size());
-				perc_label.push_back(cluster_label);
-			}
-		}
-	}
-
+	populate_percolation_label_vector(latsiz);
 	std::sort(subtreeSize, len+subtreeSize);
 	printf("[\u2714] largest cluster size = %d\n", subtreeSize[len-1]);
-	if(subtreeSize[len-1] < latsiz) {printf("[ ] does not percolate!\n"); return -1;}
+	if(subtreeSize[len-1] < latsiz) {printf("[X] does NOT percolate!\n"); return -1;}
+	return 1;
+}
+
+
+
+/**
+* Perform union find to connect the sites into a Union Find search tree.
+* Returns -1 if we can establish that there are no percolations.
+* otherwise return 1.
+* Use for bond percolations.
+*/
+int perform_union_find_bond(BOND** bonds, int** lattice, int latsiz)
+{
+	for(int i = 0; i < latsiz; i++)
+	{
+		for(int j = 0; j < latsiz; j++)
+		{
+			if(lattice[i][j] ==1)
+			{
+				//look up.
+				if(bonds[i][j].up == 1)
+					quick_union(twoDto1D(modulo(i-1,latsiz), j, latsiz), twoDto1D(i, j, latsiz));
+				//look left.
+				if(bonds[i][j].left == 1)
+					quick_union(twoDto1D(i, modulo(j-1, latsiz), latsiz), twoDto1D(i, j, latsiz));
+			}
+		}
+	}
+	populate_percolation_label_vector(latsiz);
+	std::sort(subtreeSize, len+subtreeSize);
+	printf("[\u2714] largest cluster size = %d\n", subtreeSize[len-1]);
+	if(subtreeSize[len-1] < latsiz) {printf("[X] does NOT percolate!\n"); return -1;}
 	return 1;
 }

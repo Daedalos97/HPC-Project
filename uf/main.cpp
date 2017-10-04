@@ -51,19 +51,35 @@ void print_usage()
 void start_union_find()
 {
 	init_lattice();
-	seed_lattice_sites(prob);
+	if(!bflag)
+		seed_lattice_sites(prob);
+	else
+		seed_lattice_bonds(prob);
 	int** l = get_lattice_array();
 	//print_lattice(lat_size, 's');
+	int early_exit;
 	init_qu_union_find(lat_size);
-	int early_exit = perform_union_find(l, lat_size); //check if all cols percolate
+	if(!bflag)
+		early_exit = perform_union_find(l, lat_size); //check if all cols percolate
+	else
+	{
+		BOND** b = get_bond_array();
+		early_exit = perform_union_find_bond(b, l, lat_size);
+	}
 	perform_hoshen_kopelman_alg(l, lat_size);
 	//print_lattice(lat_size, 's');
 	if(early_exit != -1)
 	{
 		//find_horizontal_percolation(l);
-		bool a = find_vertical_percolation(l, lat_size);
-		bool b = find_horizontal_percolation(l, lat_size);
-		printf("vertical percolation :%d.\nhorizontal percolation :%d.\n",a, b);
+		if(match_type == 0)
+			find_vertical_percolation(l, lat_size);
+		else if(match_type == 1)
+			find_horizontal_percolation(l, lat_size);
+		else
+		{
+			find_vertical_percolation(l, lat_size);
+			find_horizontal_percolation(l, lat_size);
+		}
 	}
 	destroy_qu_union_find();
 	destroy_lattice();
@@ -75,16 +91,18 @@ int main(int argc, char** argv)
 {
 	int opt;
 	int lsiz;
-	if(argc > 2)
-	{
-		try{
-			match_type = atoi(argv[2]);
-		}catch(...){
-			fprintf(stderr, "ERROR: Invalid Input!");
-			print_usage();
-			exit(1);
-		}
-	}
+	//if(argc > 4)//compulsory args.
+	//{
+	//	try{
+	//		match_type = atoi(argv[argc-1]);
+	//		printf("numargs %d arg1 %s match_type=%d\n", argc, argv[1], match_type);
+	//		printf("%d\n",match_type);
+	//	}catch(...){
+	//		fprintf(stderr, "ERROR: Invalid Input!");
+	//		print_usage();
+	//		exit(1);
+	//	}
+	//}
 	while ((opt = getopt(argc,argv,OPTLIST)) != -1)
 	{
 		switch (opt)

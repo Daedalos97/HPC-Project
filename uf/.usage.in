@@ -1,4 +1,4 @@
-usage: ./percol -p prob -s|-b [arg -l siz]
+usage: ./percolation -p prob -s|-b [-l siz arg]
 
 options:
 -b 		Use bond percolation

@@ -71,17 +71,21 @@ void seed_lattice_bonds(double p)
 	{
 		for(int j = 0; j < lat.len; j++)
 		{
-			double bond_prob = (double)rand()/(double)RAND_MAX;
-			if(bond_prob < p)
+			double bond_prob_down = (double)rand()/(double)RAND_MAX;
+			if(bond_prob_down < p)
 			{
+				lat.bond_array[i][j].down = 1;
+				lat.bond_array[(i+1)%lat.len][j].up = 1; //down neighbour
 				lat.lattice_array[i][j] = 1;
-				lat.lattice_array[(i+1)%lat.len][j] = 1; //down neighbour
+				lat.lattice_array[(i+1)%lat_size][j] = 1;
 			}
-			bond_prob = (double)rand()/(double)RAND_MAX;
-			if(bond_prob < p)
+			double bond_prob_right = (double)rand()/(double)RAND_MAX;
+			if(bond_prob_right < p)
 			{
+				lat.bond_array[i][j].right = 1;
+				lat.bond_array[i][(j+1)%lat.len].left = 1; //right neighbour
 				lat.lattice_array[i][j] = 1;
-				lat.lattice_array[i][(j+1)%lat.len] = 1; //right neighbour
+				lat.lattice_array[(i+1)%lat_size][j] = 1;
 			}
 		}
 
@@ -105,6 +109,15 @@ void init_lattice()
 	for(int i = 0; i < lat_size; i++){
 		lat.lattice_array[i] = (int*) malloc(lat_size*sizeof(int));
 	}
+
+	if(bflag)
+	{
+		lat.bond_array = (BOND**) malloc(lat_size*sizeof(BOND*));
+		for(int j = 0; j < lat_size; j++)
+		{
+			lat.bond_array[j] = (BOND*) malloc(lat_size*sizeof(BOND));
+		}
+	}
 }
 
 
@@ -118,6 +131,15 @@ void destroy_lattice()
 		free(lat.lattice_array[i]);
 	}
 	free(lat.lattice_array);
+
+	if(bflag)
+	{
+		for(int j = 0; j < lat.len; j++)
+		{
+			free(lat.bond_array[j]);
+		}
+		free(lat.bond_array);
+	}
 }
 
 
@@ -127,4 +149,12 @@ void destroy_lattice()
 int** get_lattice_array()
 {
 	return lat.lattice_array;
+}
+
+/**
+* Return the BOND array.
+*/
+BOND** get_bond_array()
+{
+	return lat.bond_array;
 }
