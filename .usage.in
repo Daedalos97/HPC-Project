@@ -5,7 +5,7 @@ options:
 -p prob		Probability (bond/site)
 -s		Use site percolation
 -l siz		Lattice size (DEFAULT : 1024*1024)
-arg		Specify what type of percolation to search:
+-t type		Specify what type of percolation to search:
 			[0] A cluster that spans all rows.
 			[1] A cluster that spans all columns.
 			[2] A cluster that spans all rows and cols.

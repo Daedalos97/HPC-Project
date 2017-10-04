@@ -3,12 +3,11 @@
 #include <stack>
 #include <vector>
 
-int matchtype;
 int largest_cluster;
 
 void search_lattice() {
 	bool percolates = false;
-	if (check_cluster()) {
+	if (check_cluster_lin()) {
 		percolates = true;
 	}
 	if (percolates) {
@@ -16,6 +15,97 @@ void search_lattice() {
 	} else {
 		printf("Largest Cluster is %d nodes\n", largest_cluster);
 	}
+}
+
+bool check_cluster_lin() {
+	int node_sum = 0;
+	std::stack<NODE> stack;
+	for (int k = 0; k < lat_size; k++) {
+		for (int l = 0; l < lat_size; l++) {
+			if (lat.bond_array[k][l].visited ==1) {
+				int horiz_sum = 0;
+				int verti_sum = 0;
+				char* horiz = (char*) malloc(lat_size*sizeof(char));
+				char* verti = (char*) malloc(lat_size*sizeof(char));
+
+				NODE root = {k,l};
+				lat.bond_array[k][l].visited = 2;
+
+				stack.push(root);
+				while (!stack.empty()) {
+					NODE node = stack.top();
+					node_sum++;
+					int i = node.position[0],j = node.position[1];
+					stack.pop();
+					if (!horiz[j]) {
+						horiz[j] = 1;
+						horiz_sum++;
+					}
+					if (!verti[i]) {
+						verti[i] = 1;
+						verti_sum++;
+					}
+					if (sflag) {
+						if (lat.bond_array[(i+lat_size-1)%lat_size][j].visited == 1) {
+							NODE new_node = {(i+lat_size-1)%lat_size,j};
+							lat.bond_array[(i+lat_size-1)%lat_size][j].visited = 2;
+							stack.push(new_node);
+						}
+						if (lat.bond_array[i][(j+lat_size-1)%lat_size].visited == 1) {
+						 	NODE new_node = {i, (j+lat_size-1)%lat_size};
+						 	lat.bond_array[i][(j+lat_size-1)%lat_size].visited = 2;
+							stack.push(new_node);
+						}
+						if (lat.bond_array[(i+1)%lat_size][j].visited == 1) {
+							NODE new_node = {(i+1)%lat_size,j};
+							lat.bond_array[(i+1)%lat_size][j].visited = 2;
+							stack.push(new_node);
+						}
+						if (lat.bond_array[i][(j+1)%lat_size].visited == 1) {
+							NODE new_node = {i,(j+1)%lat_size};
+							lat.bond_array[i][(j+1)%lat_size].visited= 2;
+							stack.push(new_node);	
+						} else {
+							//Bond Percolation
+							BOND b = lat.bond_array[i][j];
+							if (b.up == 1 && lat.bond_array[(i+lat_size-1)%lat_size][j].visited != 2) {
+								NODE new_node = {(i+lat_size-1)%lat_size,j};
+								lat.bond_array[(i+lat_size-1)%lat_size][j].visited = 2;
+								stack.push(new_node);
+							}
+							if (b.left == 1 && lat.bond_array[i][(j+1)%lat_size].visited != 2) {
+								NODE new_node = {i,(j+1)%lat_size};
+								lat.bond_array[i][(j+1)%lat_size].visited = 2;
+								stack.push(new_node);	
+							}
+							if (b.right == 1 && lat.bond_array[i][(j+lat_size-1)%lat_size].visited != 2) {
+							 	NODE new_node = {i, (j+lat_size-1)%lat_size};
+							 	lat.bond_array[i][(j+lat_size-1)%lat_size].visited = 2;
+								stack.push(new_node);
+							}
+							if (b.down == 1 && lat.bond_array[(i+1)%lat_size][j].visited != 2) {
+								NODE new_node = {(i+1)%lat_size,j};
+								lat.bond_array[(i+1)%lat_size][j].visited = 2;
+								stack.push(new_node);
+							}
+						}
+					}
+				}
+				if (node_sum > largest_cluster) largest_cluster = node_sum;
+				if (horiz_sum == lat_size && verti_sum == lat_size && matchtype == 2) {
+					printf("Percolates Horizontally & Vertically!\n");
+					return true;
+				} else if (horiz_sum == lat_size && matchtype == 1) {
+					printf("Percolates Horizontally!\n");
+					return true;
+				} else if (verti_sum == lat_size && matchtype == 0) {
+					printf("\nPercolates Vertically!\n");
+					return true;
+				}
+			}
+		}
+	}
+	return false;
 }
 
 bool check_cluster() {
@@ -111,13 +201,13 @@ bool check_cluster() {
 								largest_cluster = node_sum;
 								printf("%d\n", largest_cluster);
 							}
-							if (horiz_sum == lat_size && verti_sum == lat_size && perc_type == 2) {
+							if (horiz_sum == lat_size && verti_sum == lat_size && matchtype == 2) {
 								printf("Percolates Horizontally & Vertically!\n");
 								stop = 0;
-							} else if (horiz_sum == lat_size && perc_type == 1) {
+							} else if (horiz_sum == lat_size && matchtype == 1) {
 								printf("Percolates Horizontally!\n");
 								stop = 0;
-							} else if (verti_sum == lat_size && perc_type == 0) {
+							} else if (verti_sum == lat_size && matchtype == 0) {
 								printf("\nPercolates Vertically!\n");
 								stop = 0;
 							}

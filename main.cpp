@@ -10,7 +10,7 @@
 #include <getopt.h>
 #include <ctype.h>
 
-#define OPTLIST "p:sbt:"
+#define OPTLIST "p:sbl:t:"
 bool pflag = false;
 bool sflag = false;
 bool bflag = false;
@@ -18,7 +18,7 @@ bool lflag = false;
 bool percflag = false;
 
 int matchtype = 2;
-int lat_size = 128;
+int lat_size = 1024;
 
 
 

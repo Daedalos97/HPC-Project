@@ -15,5 +15,6 @@ extern int matchtype;
 
 void search_lattice();
 bool check_cluster();
+bool check_cluster_lin();
 
 #endif
