@@ -113,7 +113,7 @@ bool check_cluster() {
 	char stop = 1;
 	std::stack<NODE> S;
 	int k,l;
-	#pragma omp parallel num_threads(16) shared(largest_cluster) firstprivate(S)
+	#pragma omp parallel num_threads(4) shared(largest_cluster) firstprivate(S)
 		#pragma omp for
 			for (k = 0; k < lat_size; k++) {
 				for (l = 0; l < lat_size; l++) {
@@ -199,18 +199,17 @@ bool check_cluster() {
 						{
 							if (node_sum > largest_cluster) {
 								largest_cluster = node_sum;
-								printf("%d\n", largest_cluster);
 							}
-							if (horiz_sum == lat_size && verti_sum == lat_size && matchtype == 2) {
-								printf("Percolates Horizontally & Vertically!\n");
-								stop = 0;
-							} else if (horiz_sum == lat_size && matchtype == 1) {
-								printf("Percolates Horizontally!\n");
-								stop = 0;
-							} else if (verti_sum == lat_size && matchtype == 0) {
-								printf("\nPercolates Vertically!\n");
-								stop = 0;
-							}
+						}
+						if (horiz_sum == lat_size && verti_sum == lat_size && matchtype == 2) {
+							printf("Percolates Horizontally & Vertically!\n");
+							stop = 0;
+						} else if (horiz_sum == lat_size && matchtype == 1) {
+							printf("Percolates Horizontally!\n");
+							stop = 0;
+						} else if (verti_sum == lat_size && matchtype == 0) {
+							printf("\nPercolates Vertically!\n");
+							stop = 0;
 						}
 					}
 				}
