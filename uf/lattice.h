@@ -11,11 +11,13 @@ typedef struct lattice {
 	int** lattice_array;
 } LATTICE;
 
-extern void init_lattice(int l);
+extern int lat_size;
+
+extern void init_lattice();
 extern void destroy_lattice();
 extern void print_lattice(int l, char c);
-extern void seed_lattice_sites(double sp);
-extern void seed_lattice_bonds(double bp);
+extern void seed_lattice_sites(double p);
+extern void seed_lattice_bonds(double p);
 extern int** get_lattice_array();
 
 #endif

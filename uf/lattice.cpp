@@ -2,7 +2,6 @@
 
 LATTICE lat;
 
-
 /**
  * Return true if site is open, false otherwise.
  */
@@ -19,13 +18,13 @@ bool is_site_open(int r, int c)
  * as argument. If 'v' is passed in as print type a visual representation is
  * provided, any other character defaults to 1s and 0s.
  */
-void print_lattice(int len, char viewType)
+void print_lattice(int len, char view_type)
 {
 	for(int i = 0; i < len; i++)
 	{
 		for(int j = 0; j < len; j++)
 		{
-			if(viewType == 'v' || viewType == 'V')
+			if(view_type == 'v' || view_type == 'V')
 			{
 				if(lat.lattice_array[i][j] == 1)
 					printf("\u2588"); //dark shade
@@ -44,7 +43,7 @@ void print_lattice(int len, char viewType)
 /**
  * A function that seeds the lattice sites, provided a site probability.
  */
-void seed_lattice_sites(double prob)
+void seed_lattice_sites(double p)
 {
 	//seeding pseudo-random number generator.
 	srand(time(NULL));
@@ -53,7 +52,7 @@ void seed_lattice_sites(double prob)
 		for(int j = 0; j < lat.len; j++)
 		{
 			double site_prob = (double)rand()/(double)RAND_MAX;
-			if(site_prob < prob )
+			if(site_prob < p )
 				lat.lattice_array[i][j] = 1;
 			else
 				lat.lattice_array[i][j] = 0;
@@ -65,7 +64,7 @@ void seed_lattice_sites(double prob)
 /**
  * A function that seeds the lattice bonds, provided a bond probability.
  */
-void seed_lattice_bonds(double prob)
+void seed_lattice_bonds(double p)
 {
 	srand(time(NULL));
 	for(int i = 0; i < lat.len; i++)
@@ -73,13 +72,13 @@ void seed_lattice_bonds(double prob)
 		for(int j = 0; j < lat.len; j++)
 		{
 			double bond_prob = (double)rand()/(double)RAND_MAX;
-			if(bond_prob < prob)
+			if(bond_prob < p)
 			{
 				lat.lattice_array[i][j] = 1;
 				lat.lattice_array[(i+1)%lat.len][j] = 1; //down neighbour
 			}
 			bond_prob = (double)rand()/(double)RAND_MAX;
-			if(bond_prob < prob)
+			if(bond_prob < p)
 			{
 				lat.lattice_array[i][j] = 1;
 				lat.lattice_array[i][(j+1)%lat.len] = 1; //right neighbour
@@ -94,17 +93,17 @@ void seed_lattice_bonds(double prob)
  * Initialize the lattice struct to specified length.
  * Dynamically allocates the array representing the lattice to a specified size.
  */
-void init_lattice(int arrlen)
+void init_lattice()
 {
-	lat.len = arrlen;
-	if(arrlen <= 1){
-		fprintf(stderr, "%d is an invalid lattice size. Must be greater than 1", arrlen);
+	lat.len = lat_size;
+	if(lat_size <= 1){
+		fprintf(stderr, "%d is an invalid lattice size. Must be greater than 1", lat_size);
 		return;
 	}
 	//dynamically allocate memory for an arrlen*arrlen 2D array.
-	lat.lattice_array = (int**) malloc(arrlen*sizeof(int*));
-	for(int i = 0; i < arrlen; i++){
-		lat.lattice_array[i] = (int*) malloc(arrlen*sizeof(int));
+	lat.lattice_array = (int**) malloc(lat_size*sizeof(int*));
+	for(int i = 0; i < lat_size; i++){
+		lat.lattice_array[i] = (int*) malloc(lat_size*sizeof(int));
 	}
 }
 
