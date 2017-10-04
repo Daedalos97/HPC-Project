@@ -20,15 +20,15 @@ void print_lattice(int len, char viewType)
 			{
 				if(viewType == 'v' || viewType == 'V')
 				{
-					if(lat.lattice_array[i][j] == 1)
+					if(lat.bond_array[i][j].visited == 1)
 						printf("*");
-					else if(lat.lattice_array[i][j] == 2)
+					else if(lat.bond_array[i][j].visited == 2)
 						printf("\u2588");
 					else
 						printf(" ");
 				}
 				else
-					printf("%i", lat.lattice_array[i][j]);
+					printf("%i", lat.bond_array[i][j].visited);
 			}
 			printf("\n");
 		}
@@ -54,14 +54,14 @@ void seed_lattice_sites(double prob)
 {
 	//seeding pseudo-random number generator.
 	srand(time(NULL));
-	#pragma omp parallel for collapse(2) 
-		for(int i = 0; i < lat.len; i++) {
-			for(int j = 0; j < lat.len; j++) {
+	#pragma omp parallel for collapse(2) num_threads(16)
+		for(int i = 0; i < lat_size; i++) {
+			for(int j = 0; j < lat_size; j++) {
 				double site_prob = (double)rand()/(double)RAND_MAX;
 				if(site_prob < prob )
-					lat.lattice_array[i][j] = 1;
+					lat.bond_array[i][j].visited = 1;
 				else
-					lat.lattice_array[i][j] = 0;
+					lat.bond_array[i][j].visited = 0;
 			}
 		}
 }
@@ -101,26 +101,13 @@ void seed_lattice_bonds(double prob)
  */
 void init_lattice()
 {
-	if (bflag) {
-		if(lat_size <= 1){
-			fprintf(stderr, "%d is an invalid lattice size. Must be greater than 1", lat_size);
-			return;
-		}
-		lat.bond_array = (BOND**) malloc(lat_size*sizeof(BOND*));
-		for(int i = 0; i < lat_size; i++){
-			lat.bond_array[i] = (BOND*) malloc(lat_size*sizeof(BOND));
-		}
-	} else {
-		lat.len = lat_size;
-		if(lat_size <= 1){
-			fprintf(stderr, "%d is an invalid lattice size. Must be greater than 1", lat_size);
-			return;
-		}
-		//dynamically allocate memory for an lat_size*lat_size 2D array.
-		lat.lattice_array = (char**) malloc(lat_size*sizeof(char*));
-		for(int i = 0; i < lat_size; i++){
-			lat.lattice_array[i] = (char*) malloc(lat_size*sizeof(char));
-		}
+	if(lat_size <= 1){
+		fprintf(stderr, "%d is an invalid lattice size. Must be greater than 1", lat_size);
+		return;
+	}
+	lat.bond_array = (BOND**) malloc(lat_size*sizeof(BOND*));
+	for(int i = 0; i < lat_size; i++){
+		lat.bond_array[i] = (BOND*) malloc(lat_size*sizeof(BOND));
 	}
 }
 
@@ -131,5 +118,8 @@ void init_lattice()
  */
 void destroy_lattice()
 {
-
+	for (int i = 0; i < lat_size; i++) {
+		free(lat.bond_array[i]);
+	}
+	free(lat.bond_array);
 }

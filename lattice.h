@@ -4,6 +4,7 @@
 #define LATTICE_H_INCLUDED
 
 extern bool bflag;
+extern bool sflag;
 
 typedef struct bond {
 	unsigned char left:1,up:1,right:1,down:1,visited:2; //Uses 6 bits out of the 8
@@ -11,7 +12,6 @@ typedef struct bond {
 
 typedef struct lattice {
 	int len;
-	char** lattice_array;
 	BOND** bond_array;
 } LATTICE;
 
