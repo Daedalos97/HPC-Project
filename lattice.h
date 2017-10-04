@@ -1,7 +1,11 @@
-#include <stdbool.h>
-
 #ifndef LATTICE_H_INCLUDED
 #define LATTICE_H_INCLUDED
+
+#include <stdbool.h>
+#include <omp.h>
+#include <cstdio>
+#include <cstdlib>
+#include <ctime>
 
 extern bool bflag;
 extern bool sflag;

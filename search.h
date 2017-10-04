@@ -1,3 +1,6 @@
+#ifndef SEARCH_H_INCLUDED
+#define SEARCH_H_INCLUDED
+
 #include "lattice.h"
 
 #include <stdlib.h>
@@ -8,7 +11,9 @@ typedef struct node {
 	int position[2];
 } NODE;
 
-extern int perc_type;
+extern int matchtype;
 
 void search_lattice();
 bool check_cluster();
+
+#endif

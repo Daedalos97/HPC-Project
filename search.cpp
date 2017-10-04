@@ -3,7 +3,7 @@
 #include <stack>
 #include <vector>
 
-int perc_type;
+int matchtype;
 int largest_cluster;
 
 void search_lattice() {

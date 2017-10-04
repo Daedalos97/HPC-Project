@@ -1,15 +1,12 @@
 #include "lattice.h"
-#include <cstdio>
-#include <cstdlib>
-#include <ctime>
 
 LATTICE lat;
 double prob;
-
+int lat_siz;
 /**
- * Prints the existing lattice, takes the length of the 2D array 
- * as argument. If 'v' is passed in as print type a visual representation is 
- * provided, any other character defaults to 1s and 0s. 
+ * Prints the existing lattice, takes the length of the 2D array
+ * as argument. If 'v' is passed in as print type a visual representation is
+ * provided, any other character defaults to 1s and 0s.
  */
 void print_lattice(int len, char viewType)
 {
@@ -114,7 +111,7 @@ void init_lattice()
 
 /**
  * Frees memory.
- * TO DO 
+ * TO DO
  */
 void destroy_lattice()
 {
