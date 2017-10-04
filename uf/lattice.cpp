@@ -4,7 +4,7 @@ LATTICE lat;
 
 
 /**
- * Return true if site is open, false otherwise. 
+ * Return true if site is open, false otherwise.
  */
 bool is_site_open(int r, int c)
 {
@@ -15,9 +15,9 @@ bool is_site_open(int r, int c)
 
 
 /**
- * Prints the existing lattice, takes the length of the 2D array 
- * as argument. If 'v' is passed in as print type a visual representation is 
- * provided, any other character defaults to 1s and 0s. 
+ * Prints the existing lattice, takes the length of the 2D array
+ * as argument. If 'v' is passed in as print type a visual representation is
+ * provided, any other character defaults to 1s and 0s.
  */
 void print_lattice(int len, char viewType)
 {
@@ -35,7 +35,7 @@ void print_lattice(int len, char viewType)
 					printf(" ");
 			}
 			else
-				printf("%i", lat.lattice_array[i][j]);
+				printf("%4d", lat.lattice_array[i][j]);
 		}
 		printf("\n");
 	}
@@ -102,9 +102,9 @@ void init_lattice(int arrlen)
 		return;
 	}
 	//dynamically allocate memory for an arrlen*arrlen 2D array.
-	lat.lattice_array = (char**) malloc(arrlen*sizeof(int*));
+	lat.lattice_array = (int**) malloc(arrlen*sizeof(int*));
 	for(int i = 0; i < arrlen; i++){
-		lat.lattice_array[i] = (char*) malloc(arrlen*sizeof(int));
+		lat.lattice_array[i] = (int*) malloc(arrlen*sizeof(int));
 	}
 }
 
@@ -125,7 +125,7 @@ void destroy_lattice()
 /**
  * Return the lattice array.
  */
-char** get_lattice_array()
+int** get_lattice_array()
 {
 	return lat.lattice_array;
 }

@@ -1,0 +1,7 @@
+usage: ./percolation -p prob -s|-b [options]
+
+	-p prob		Probability (bond/site)
+	-b 		Use bond percolation
+	-s		Use site percolation 
+	-l siz		Lattice size (DEFAULT : 1024*1024)
+	perctype	Specify what type of percolation to search [0,1,2].

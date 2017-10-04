@@ -34,6 +34,28 @@ int find_percolation(int* h, int* v, int s)
 	return -1;
 }
 
+
+void fill_arrays_with_zero(int* a, int siz)
+{
+	for(int i = 0; i < siz; i++)
+	{
+		a[i] = 0;
+	}
+}
+
+
+//int* find_cluster_recursive(char** graph, int siz, std::stack<NODE> nodestack)
+//{
+//	int* horiz = (int*)malloc(siz*sizeof(int));
+//	int* vert = (int*)malloc(siz*sizeof(int));
+//	fill_arrays_with_zero(horiz, siz);
+//	fill_arrays_with_zero(vert, siz);	
+//
+//	free(horiz);
+//	free(vert);
+//}
+
+
 /**
  * Performs the Depth first search over the provided graph of nodes siz^2
  * nodestack is a stack that contains the first node the stack is init. with.
@@ -46,11 +68,8 @@ int* find_cluster(char** graph, int siz, std::stack<NODE> nodestack)
 {
 	int* horiz = (int*)malloc(siz*sizeof(int));
 	int* vert = (int*)malloc(siz*sizeof(int));
-	for(int i = 0; i < siz; i++)
-	{
-		horiz[i] = 0;
-		vert[i] = 0;
-	}
+	fill_arrays_with_zero(horiz, siz);
+	fill_arrays_with_zero(vert, siz);
 	int nodes = 0; //number of nodes traversed. Could be huge for 2048 sized lattice.
 	//std::cout << "node" << std::endl;
 	while(!nodestack.empty())
@@ -153,3 +172,5 @@ void perform_depth_first_search(char** lattice, int siz)
 	free(clusterstat);
 	printf("percolates: %d\nmax cluster size:%d\n", perctype, perclen);
 }
+
+
