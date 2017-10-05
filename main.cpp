@@ -18,7 +18,7 @@ bool lflag = false;
 bool percflag = false;
 
 int matchtype = 2;
-int lat_size = 1024;
+int lat_size = 4;
 
 
 
@@ -54,7 +54,7 @@ void start_search() {
 			seed_lattice_bonds(prob);
 		}
 		search_lattice();
-		//print_lattice(lat_size,'v');
+		print_lattice(lat_size,'v');
 		//lat_size = lat_size * 2;
 	//}
 }

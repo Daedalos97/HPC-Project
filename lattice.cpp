@@ -98,6 +98,7 @@ void seed_lattice_bonds(double prob)
  */
 void init_lattice()
 {
+	lat.len = lat_size;
 	if(lat_size <= 1){
 		fprintf(stderr, "%d is an invalid lattice size. Must be greater than 1", lat_size);
 		return;

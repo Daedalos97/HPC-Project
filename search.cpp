@@ -4,9 +4,13 @@
 #include <vector>
 
 int largest_cluster;
+std::stack<NODE> S;
+int node_sum;
+char* horiz = (char*) malloc(lat_size*sizeof(char));
+char* verti = (char*) malloc(lat_size*sizeof(char));
 
 void search_lattice() {
-	check_cluster_linear();
+	check_cluster();
 	printf("Largest Cluster is %d nodes\n", largest_cluster);
 }
 
@@ -105,109 +109,125 @@ void check_cluster_linear() {
 	}
 }
 
+void explore(int i, int j) {
+	printf("Exploring: %d  %d\n", i,j);
+	#pragma omp critical
+	{
+		node_sum++;
+		lat.bond_array[i][j].visited = 2;
+	//Doesnt Matter if we have a conflict as its set to 1.
+	horiz[j] = 1;
+	verti[i] = 1;
+	if (sflag) {
+		printf("Going to explore %d %d\n", (i+lat_size-1)%lat_size,j);
+		if (lat.bond_array[(i+lat_size-1)%lat_size][j].visited == 1) {
+			#pragma omp task untied
+			{
+				explore((i+lat_size-1)%lat_size,j);
+			}
+		}
+		printf("Going to explore %d %d\n", i,(j+lat_size-1)%lat_size);
+		if (lat.bond_array[i][(j+lat_size-1)%lat_size].visited == 1) {
+			#pragma omp task untied
+			{
+				explore(i,(j+lat_size-1)%lat_size);
+			}
+		}
+		printf("Going to explore %d %d\n", i,(j+1)%lat_size);
+		if (lat.bond_array[i][(j+1)%lat_size].visited == 1) {
+			#pragma omp task untied
+			{
+				explore(i,(j+1)%lat_size);
+			}
+		}
+		printf("Going to explore %d %d\n", (i+1)%lat_size,j);
+		if (lat.bond_array[(i+1)%lat_size][j].visited == 1) {
+			#pragma omp task untied
+			{
+				explore((i+1)%lat_size,j);
+			}
+		}
+		#pragma omp taskwait
+	}
+}
+}
+
 void check_cluster() {
 	largest_cluster = 0;
-	int k,l;
-	#pragma omp parallel num_threads(4) shared(largest_cluster)
-	{
-		std::stack<NODE> S;
-		#pragma omp for
-			for (k = 0; k < lat_size; k++) {
-				for (l = 0; l < lat_size; l++) {
-					if (lat.bond_array[k][l].visited == 1) {
-						char* horiz = (char*) malloc(lat_size*sizeof(char));
-						char* verti = (char*) malloc(lat_size*sizeof(char));
-						
-						NODE n = {k,l};
-						lat.bond_array[k][l].visited = 2;
-						S.push(n);
+	node_sum = 0;
+	for (int k = 0; k < lat_size; k++) {
+		for (int l = 0; l < lat_size; l++) {
+			printf("%d %d\n", k,l);
+			if (lat.bond_array[k][l].visited == 1) {
+				node_sum = 0;
 
-						int node_sum = 0;
-						int horiz_sum = 0;
-						int verti_sum = 0;
+				int horiz_sum = 0;
+				int verti_sum = 0;
+				for (int i = 0; i < lat_size; i++) {
+					horiz[i] = 0;
+					verti[i] = 0;
+				}
 
-						while (!S.empty()) {
-							
-							NODE new_node = S.top();
-							int i = new_node.position[0], j = new_node.position[1];
-							horiz[i] = 1;
-							verti[j] = 1;
-
-							S.pop();
-							node_sum++;
-
-							if (horiz[j]) {
-								horiz_sum++;
-							}
-							if (verti[i]) {
-								verti_sum++;
-							}
-
-							//Prioritise Down and Right Movement by pushing this last.
-							//Site Percolation
+						//Prioritise Down and Right Movement.
+						//Site Percolation
+					#pragma omp parallel num_threads(4) shared(largest_cluster,node_sum,horiz,verti,lat) firstprivate(lat_size)
+					{
+						#pragma omp single
 							if (sflag) {
-								if (lat.bond_array[(i+lat_size-1)%lat_size][j].visited == 1) {
-									lat.bond_array[(i+lat_size-1)%lat_size][j].visited = 2;
-									NODE neigh = {(i+lat_size-1)%lat_size,j};
-									S.push(neigh);
+								#pragma omp task
+								{
+									explore(k,l);
 								}
-								if (lat.bond_array[i][(j+lat_size-1)%lat_size].visited == 1) {
-									lat.bond_array[i][(j+lat_size-1)%lat_size].visited = 2;
-									NODE neigh = {i,(j+lat_size-1)%lat_size};
-									S.push(neigh);
-								}
-								if (lat.bond_array[i][(j+1)%lat_size].visited == 1) {
-									lat.bond_array[i][(j+1)%lat_size].visited = 2;
-									NODE neigh = {i,(j+1)%lat_size};
-									S.push(neigh);
-								}
-								if (lat.bond_array[(i+1)%lat_size][j].visited == 1) {
-									lat.bond_array[(i+1)%lat_size][j].visited = 2;
-									NODE neigh = {(i+1)%lat_size,j};
-									S.push(neigh);	
-								}
-							} else {
-								//Bond Percolation
-								BOND b = lat.bond_array[i][j];
-								if (b.up == 1 && lat.bond_array[(i+lat_size-1)%lat_size][j].visited == 1) {
-									NODE new_node = {(i+lat_size-1)%lat_size,j};
-									lat.bond_array[(i+lat_size-1)%lat_size][j].visited = 2;
-									S.push(new_node);
-								}
-								if (b.left == 1 && lat.bond_array[i][(j+1)%lat_size].visited == 1) {
-									NODE new_node = {i,(j+1)%lat_size};
-									lat.bond_array[i][(j+1)%lat_size].visited = 2;
-									S.push(new_node);	
-								}
-								if (b.right == 1 && lat.bond_array[i][(j+lat_size-1)%lat_size].visited == 1) {
-								 	NODE new_node = {i, (j+lat_size-1)%lat_size};
-								 	lat.bond_array[i][(j+lat_size-1)%lat_size].visited = 2;
-									S.push(new_node);
-								}
-								if (b.down == 1 && lat.bond_array[(i+1)%lat_size][j].visited == 1) {
-									NODE new_node = {(i+1)%lat_size,j};
-									lat.bond_array[(i+1)%lat_size][j].visited = 2;
-									S.push(new_node);
-								}
+							
 							}
-						}
-						free(horiz);
-						free(verti);
-						#pragma omp critical 
-						{
-							if (node_sum > largest_cluster) {
-								largest_cluster = node_sum;
+					} 
+					/*else {
+							//Bond Percolation
+							BOND b = lat.bond_array[i][j];
+							if (b.up == 1 && lat.bond_array[(i+lat_size-1)%lat_size][j].visited == 1) {
+								NODE new_node = {(i+lat_size-1)%lat_size,j};
+								lat.bond_array[(i+lat_size-1)%lat_size][j].visited = 2;
+								S.push(new_node);
 							}
+							if (b.left == 1 && lat.bond_array[i][(j+1)%lat_size].visited == 1) {
+								NODE new_node = {i,(j+1)%lat_size};
+								lat.bond_array[i][(j+1)%lat_size].visited = 2;
+								S.push(new_node);	
+							}
+							if (b.right == 1 && lat.bond_array[i][(j+lat_size-1)%lat_size].visited == 1) {
+							 	NODE new_node = {i, (j+lat_size-1)%lat_size};
+							 	lat.bond_array[i][(j+lat_size-1)%lat_size].visited = 2;
+								S.push(new_node);
+							}
+							if (b.down == 1 && lat.bond_array[(i+1)%lat_size][j].visited == 1) {
+								NODE new_node = {(i+1)%lat_size,j};
+								lat.bond_array[(i+1)%lat_size][j].visited = 2;
+								S.push(new_node);
+							}
+						}*/
+
+					for (int m = 0; m < lat_size; m++) {
+						if (horiz[m]) {
+							horiz_sum++;
+							horiz[m] = 0;
 						}
-						if (horiz_sum == lat_size && verti_sum == lat_size && matchtype == 2) {
-							printf("Percolates Horizontally & Vertically!\n");
-						} else if (horiz_sum == lat_size && matchtype == 1) {
-							printf("Percolates Horizontally!\n");
-						} else if (verti_sum == lat_size && matchtype == 0) {
-							printf("\nPercolates Vertically!\n");
+						if (verti[m]) {
+							verti_sum++;
+							verti[m] = 0;
 						}
+					}
+					//Shouldnt need critical as all other threads are suspended temporarily.
+					if (node_sum > largest_cluster) {
+						largest_cluster = node_sum;
+					}
+					if (horiz_sum == lat_size && verti_sum == lat_size && matchtype == 2) {
+						printf("Percolates Horizontally & Vertically!\n");
+					} else if (horiz_sum == lat_size && matchtype == 1) {
+						printf("Percolates Horizontally!\n");
+					} else if (verti_sum == lat_size && matchtype == 0) {
+						printf("\nPercolates Vertically!\n");
 					}
 				}
 			}
-	}
+		}
 }
