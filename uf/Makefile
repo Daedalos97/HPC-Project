@@ -19,4 +19,4 @@ main : $(OBJ)
 	$(CPP11) $(CPPFLAGS) -c $< $(LIBFLAGS)
 
 clean:
-	$(RM) -f $(EXE) $(OBJ)
+	$(RM) -f $(EXE) $(OBJ) 

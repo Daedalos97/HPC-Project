@@ -13,13 +13,17 @@ import subprocess;
 from os import system, remove;
 
 
+#plots the generated graph..
+def plot_graph():
+    subprocess.call(['gnuplot', '--persist', '.plot_pref.gp'], shell=False)
+
 
 # generate a .dat file containing the output from the percolation porgram.
 # the output is then plotted using gnu-plot.
 # to plot the graph use gnuplot:
 # gnuplot '.plot_pref.gp' --persist
 def generate_data(perc_type):
-    plotPref = open('.plot_pref.gp', 'w') 
+    plotPref = open('.plot_pref.gp', 'w')
     f = open('.phase_transition.gp', 'w')
 
     if(perc_type == 's'):
@@ -45,6 +49,8 @@ def generate_data(perc_type):
         f.write(outstring);
         prob+=0.01
     f.close()
+    plot_graph()
+
 
 
 if __name__ == '__main__':

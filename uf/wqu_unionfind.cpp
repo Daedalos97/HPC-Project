@@ -14,7 +14,9 @@ int* parentId; //contains the index of the parent
 int* subtreeSize;  //the size of the subtree from a node.
 std::vector<int> perc_label; //labels that might be assigned to a percolating cluster.
 int len; //stores the size of the lattice.
-
+bool no_sites_occupied; //since subtree size is being used as size of cluster, this
+												//bool value is to check that there is at least one occupied
+												// site, to prevent it from falsely returning 1.
 
 /**
  * Initialize a connectionless lattice of a provided size..
@@ -24,9 +26,6 @@ void init_qu_union_find(int siz)
 	len = siz*siz; //including virtual top, bottom, left, right
 	parentId = (int*)malloc(len*sizeof(int));
 	subtreeSize = (int*)malloc(len*sizeof(int));
-	//row_perc_found = false;
-	//col_perc_found = false;
-	//treeNodes = (SITE*)malloc(siz*siz*sizeof(SITE));
 	for(int i = 0; i < len; i++)
 	{
 		parentId[i] = i;
@@ -245,12 +244,14 @@ void populate_percolation_label_vector(int latsiz)
 */
 int perform_union_find(int** lattice, int latsiz)
 {
+	no_sites_occupied = true;
 	for(int i = 0; i < latsiz; i++)
 	{
 		for(int j = 0; j < latsiz; j++)
 		{
 			if(lattice[i][j] ==1)
 			{
+				no_sites_occupied = false; // at least 1 site is occupied.
 				//look up.
 				if(lattice[modulo(i-1, latsiz)][j] == 1)
 					quick_union(twoDto1D(modulo(i-1,latsiz), j, latsiz), twoDto1D(i, j, latsiz));
@@ -261,8 +262,13 @@ int perform_union_find(int** lattice, int latsiz)
 		}
 	}
 	populate_percolation_label_vector(latsiz);
-	std::sort(subtreeSize, len+subtreeSize);
-	printf("[#] largest cluster size = %d\n", subtreeSize[len-1]);
+	if(!no_sites_occupied)
+	{
+		std::sort(subtreeSize, len+subtreeSize);
+		printf("[#] largest cluster size = %d\n", subtreeSize[len-1]);
+	} else{
+		printf("[#] largest cluster size = %d\n", 0);
+	}
 	if(subtreeSize[len-1] < latsiz) {printf("[X] does NOT percolate!\n"); return -1;}
 	return 1;
 }
