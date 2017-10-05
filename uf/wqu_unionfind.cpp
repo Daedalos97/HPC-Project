@@ -135,7 +135,6 @@ int twoDto1D(int i, int j, int siz)
 */
 void perform_hoshen_kopelman_alg(int** lattice, int latsiz)
 {
-#pragma omp parallel for collapse(2)
 	for(int i = 0; i < latsiz; i++)
 	{
 		for(int j = 0; j < latsiz; j++)
@@ -147,6 +146,8 @@ void perform_hoshen_kopelman_alg(int** lattice, int latsiz)
 		}
 	}
 }
+
+
 
 /**
 * perc_label stores all the potential cluster labels which can result in percolation
@@ -282,10 +283,59 @@ int perform_union_find(int** lattice, int latsiz)
 * Returns -1 if we can establish that there are no percolations.
 * otherwise return 1.
 */
+int perform_union_find_m_t_2(int** lattice, int latsiz)
+{
+	no_sites_occupied = true;
+	#pragma omp parallel for schedule(static)
+	for(int i = 0; i < latsiz; i++)
+	{
+		#pragma omp parallel for schedule(static) firstprivate(i)
+		for(int j = 0; j < latsiz; j++)
+		{
+			if(lattice[i][j] ==1)
+			{
+				no_sites_occupied = false; // at least 1 site is occupied.
+				//look up.
+				if(lattice[modulo(i-1, latsiz)][j] == 1)
+				{
+						quick_union(twoDto1D(modulo(i-1,latsiz), j, latsiz), twoDto1D(i, j, latsiz));
+				}
+				//look left.
+				if(lattice[i][modulo(j-1, latsiz)] == 1)
+				{
+					quick_union(twoDto1D(i, modulo(j-1, latsiz), latsiz), twoDto1D(i, j, latsiz));
+				}
+			}
+		}
+	}
+
+	populate_percolation_label_vector(latsiz);
+	if(!no_sites_occupied)
+	{
+		std::sort(subtreeSize, len+subtreeSize);
+		printf("[#] largest cluster size = %d\n", subtreeSize[len-1]);
+	} else{
+		printf("[#] largest cluster size = %d\n", 0);
+	}
+	if(subtreeSize[len-1] < latsiz) {printf("[X] does NOT percolate!\n"); return -1;}
+	return 1;
+}
+
+
+
+
+/**
+* Perform union find to connect the sites into a Union Find search tree.
+* Returns -1 if we can establish that there are no percolations.
+* otherwise return 1.
+*/
 int perform_union_find_multi_threaded(int** lattice, int latsiz)
 {
 	no_sites_occupied = true;
-#pragma omp parallel for collapse(2)
+#pragma omp parallel
+{
+#pragma omp single
+{
 	for(int i = 0; i < latsiz; i++)
 	{
 		for(int j = 0; j < latsiz; j++)
@@ -295,13 +345,27 @@ int perform_union_find_multi_threaded(int** lattice, int latsiz)
 				no_sites_occupied = false; // at least 1 site is occupied.
 				//look up.
 				if(lattice[modulo(i-1, latsiz)][j] == 1)
-					quick_union(twoDto1D(modulo(i-1,latsiz), j, latsiz), twoDto1D(i, j, latsiz));
+				{
+					#pragma omp task
+					{
+						quick_union(twoDto1D(modulo(i-1,latsiz), j, latsiz), twoDto1D(i, j, latsiz));
+					}
+				}
 				//look left.
 				if(lattice[i][modulo(j-1, latsiz)] == 1)
+				{
+					#pragma omp task
+					{
 					quick_union(twoDto1D(i, modulo(j-1, latsiz), latsiz), twoDto1D(i, j, latsiz));
+					}
+				}
 			}
 		}
 	}
+	#pragma omp taskwait
+}
+}
+
 	populate_percolation_label_vector(latsiz);
 	if(!no_sites_occupied)
 	{

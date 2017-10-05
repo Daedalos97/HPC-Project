@@ -61,7 +61,7 @@ void start_union_find()
 	int early_exit;
 	init_qu_union_find(lat_size);
 	if(!bflag)
-		early_exit = perform_union_find_multi_threaded(l, lat_size); //check if all cols percolate
+		early_exit = perform_union_find_m_t_2(l, lat_size); //check if all cols percolate
 	else
 	{
 		BOND** b = get_bond_array();

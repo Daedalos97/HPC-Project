@@ -15,6 +15,7 @@ extern void print_array_parentid();
 extern void print_array_subtrees();
 extern int perform_union_find(int** l, int s);
 extern int perform_union_find_multi_threaded(int** l, int s);
+int perform_union_find_m_t_2(int** l, int s);
 extern int perform_union_find_bond(BOND** b, int** l, int s);
 extern bool find_vertical_percolation(int** l, int s);
 extern bool find_horizontal_percolation(int** l, int s);
