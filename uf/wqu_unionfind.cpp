@@ -185,7 +185,7 @@ bool find_vertical_percolation(int** l, int siz)
 		}
 	}
 	if(!row_perc_found){printf("[X] does NOT percolate across all cols!\n");}
-	else{printf("[\u2714] percolates across all cols!\n");}
+	else{printf("[#] percolates across all cols!\n");}
 	return row_perc_found;
 }
 
@@ -213,7 +213,7 @@ bool find_horizontal_percolation(int** l, int siz)
 		}
 	}
 	if(!col_perc_found){printf("[X] does NOT percolate across all rows!\n");}
-	else{printf("[\u2714] percolates across all rows!\n");}
+	else{printf("[#] percolates across all rows!\n");}
 	return col_perc_found;
 }
 
@@ -262,7 +262,7 @@ int perform_union_find(int** lattice, int latsiz)
 	}
 	populate_percolation_label_vector(latsiz);
 	std::sort(subtreeSize, len+subtreeSize);
-	printf("[\u2714] largest cluster size = %d\n", subtreeSize[len-1]);
+	printf("[#] largest cluster size = %d\n", subtreeSize[len-1]);
 	if(subtreeSize[len-1] < latsiz) {printf("[X] does NOT percolate!\n"); return -1;}
 	return 1;
 }
@@ -294,7 +294,7 @@ int perform_union_find_bond(BOND** bonds, int** lattice, int latsiz)
 	}
 	populate_percolation_label_vector(latsiz);
 	std::sort(subtreeSize, len+subtreeSize);
-	printf("[\u2714] largest cluster size = %d\n", subtreeSize[len-1]);
+	printf("[#] largest cluster size = %d\n", subtreeSize[len-1]);
 	if(subtreeSize[len-1] < latsiz) {printf("[X] does NOT percolate!\n"); return -1;}
 	return 1;
 }
