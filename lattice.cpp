@@ -51,7 +51,7 @@ void seed_lattice_sites(double prob)
 {
 	//seeding pseudo-random number generator.
 	srand(time(NULL));
-	#pragma omp parallel for collapse(2) num_threads(16)
+	#pragma omp parallel for collapse(2) num_threads(8)
 		for(int i = 0; i < lat_size; i++) {
 			for(int j = 0; j < lat_size; j++) {
 				double site_prob = (double)rand()/(double)RAND_MAX;

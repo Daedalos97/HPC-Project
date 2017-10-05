@@ -14,7 +14,7 @@ typedef struct node {
 extern int matchtype;
 
 void search_lattice();
-bool check_cluster();
-bool check_cluster_lin();
+void check_cluster();
+void check_cluster_linear();
 
 #endif
