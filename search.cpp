@@ -109,78 +109,94 @@ void check_cluster_linear() {
 	}
 }
 
-void explore(int i, int j) {
-	printf("Exploring: %d  %d\n", i,j);
-	#pragma omp critical
-	{
-		node_sum++;
-		lat.bond_array[i][j].visited = 2;
-	//Doesnt Matter if we have a conflict as its set to 1.
-	horiz[j] = 1;
-	verti[i] = 1;
-	if (sflag) {
-		printf("Going to explore %d %d\n", (i+lat_size-1)%lat_size,j);
-		if (lat.bond_array[(i+lat_size-1)%lat_size][j].visited == 1) {
-			#pragma omp task untied
-			{
-				explore((i+lat_size-1)%lat_size,j);
+void dfs(int i0, int i1) {
+	int size = i1-i0;
+	std::stack<NODE> stack;
+	for (int k = 0; k < i1; k++) {
+		for (int l = 0; l < lat_size; l++) {
+			if (lat.bond_array[i][j].visited == 1) {
+				node_sum = 0;
+				NODE root = {k,l};
+				stack.push(root);
+
+				while (!stack.empty()) {
+					NODE node = stack.top();
+					node_sum++;
+					int i = node.position[0],j = node.position[1];
+					stack.pop();
+					if (!horiz[j]) {
+						horiz[j] = 1;
+						horiz_sum++;
+					}
+					if (!verti[i]) {
+						verti[i] = 1;
+						verti_sum++;
+					}
+					if (i >= i0 && i <i1) {
+						if (sflag) {
+							if (lat.bond_array[(i+size-1)%size][j].visited == 1) {
+								NODE new_node = {(i+size-1)%size,j};
+								lat.bond_array[(i+size-1)%size][j].visited = 2;
+								stack.push(new_node);
+							}
+							if (lat.bond_array[i][(j+lat_size-1)%lat_size].visited == 1) {
+							 	NODE new_node = {i, (j+lat_size-1)%lat_size};
+							 	lat.bond_array[i][(j+lat_size-1)%lat_size].visited = 2;
+								stack.push(new_node);
+							}
+							if (lat.bond_array[(i+1)%size][j].visited == 1) {
+								NODE new_node = {(i+1)%size,j};
+								lat.bond_array[(i+1)%size][j].visited = 2;
+								stack.push(new_node);
+							}
+							if (lat.bond_array[i][(j+1)%lat_size].visited == 1) {
+								NODE new_node = {i,(j+1)%lat_size};
+								lat.bond_array[i][(j+1)%lat_size].visited= 2;
+								stack.push(new_node);	
+							} else {
+								//Bond Percolation
+								BOND b = lat.bond_array[i][j];
+								if (b.up && lat.bond_array[(i+size-1)%size][j].visited != 1) {
+									NODE new_node = {(i+size-1)%size,j};
+									lat.bond_array[(i+size-1)%size][j].visited = 2;
+									stack.push(new_node);
+								}
+								if (b.left && lat.bond_array[i][(j+1)%lat_size].visited != 1) {
+									NODE new_node = {i,(j+1)%lat_size};
+									lat.bond_array[i][(j+1)%lat_size].visited = 2;
+									stack.push(new_node);	
+								}
+								if (b.right && lat.bond_array[i][(j+lat_size-1)%lat_size].visited != 1) {
+								 	NODE new_node = {i, (j+lat_size-1)%lat_size};
+								 	lat.bond_array[i][(j+lat_size-1)%lat_size].visited = 2;
+									stack.push(new_node);
+								}
+								if (b.down && lat.bond_array[(i+1)%size][j].visited != 1) {
+									NODE new_node = {(i+1)%size,j};
+									lat.bond_array[(i+1)%size][j].visited = 2;
+									stack.push(new_node);
+								}
+							}
+						}
+					}
+				}
 			}
 		}
-		printf("Going to explore %d %d\n", i,(j+lat_size-1)%lat_size);
-		if (lat.bond_array[i][(j+lat_size-1)%lat_size].visited == 1) {
-			#pragma omp task untied
-			{
-				explore(i,(j+lat_size-1)%lat_size);
-			}
-		}
-		printf("Going to explore %d %d\n", i,(j+1)%lat_size);
-		if (lat.bond_array[i][(j+1)%lat_size].visited == 1) {
-			#pragma omp task untied
-			{
-				explore(i,(j+1)%lat_size);
-			}
-		}
-		printf("Going to explore %d %d\n", (i+1)%lat_size,j);
-		if (lat.bond_array[(i+1)%lat_size][j].visited == 1) {
-			#pragma omp task untied
-			{
-				explore((i+1)%lat_size,j);
-			}
-		}
-		#pragma omp taskwait
 	}
 }
-}
+
 
 void check_cluster() {
 	largest_cluster = 0;
 	node_sum = 0;
-	for (int k = 0; k < lat_size; k++) {
-		for (int l = 0; l < lat_size; l++) {
-			printf("%d %d\n", k,l);
-			if (lat.bond_array[k][l].visited == 1) {
-				node_sum = 0;
-
-				int horiz_sum = 0;
-				int verti_sum = 0;
-				for (int i = 0; i < lat_size; i++) {
-					horiz[i] = 0;
-					verti[i] = 0;
-				}
-
+	int arr_split = size/omp_get_num_threads();
+	#pragma omp parallel num_threads(4) shared(node_sum,horiz,verti,lat) firstprivate(lat_size,largest_cluster)
+	{
+		int th = omp_get_thread_num();
+		dfs(arr_split*th,arr_split*(th+1));
 						//Prioritise Down and Right Movement.
 						//Site Percolation
-					#pragma omp parallel num_threads(4) shared(largest_cluster,node_sum,horiz,verti,lat) firstprivate(lat_size)
-					{
-						#pragma omp single
-							if (sflag) {
-								#pragma omp task
-								{
-									explore(k,l);
-								}
-							
-							}
-					} 
+					
 					/*else {
 							//Bond Percolation
 							BOND b = lat.bond_array[i][j];
