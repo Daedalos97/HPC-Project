@@ -4,19 +4,24 @@
 
 #-------------------------------------------------
 EXE = percolation
-HEADERS = $(EXE).h
 CPP11 = g++ -std=c++11
 CPPFLAGS = -Wall -Werror -pedantic
 LIBFLAGS = -fopenmp -lm
-OBJ = lattice.o wqu_unionfind.o
+LIB_LAT = lattice
+LIB_ALG = wqu_unionfind
+OBJ = $(LIB_LAT).o $(LIB_ALG).o
 RM = /bin/rm
 #-------------------------------------------------
 
 main : $(OBJ)
 	$(CPP11) $(CPPFLAGS) -o $(EXE) $(OBJ) main.cpp $(LIBFLAGS)
 
-%.o : %.cpp $(HEADERS)
-	$(CPP11) $(CPPFLAGS) -c $< $(LIBFLAGS)
+$(LIB_ALG).o : $(LIB_ALG).cpp $(LIB_ALG).h
+	$(CPP11) $(CPPFLAGS) $(LIBFLAGS) -c $(LIB_ALG).cpp
+
+$(LIB_LAT).o : $(LIB_LAT).cpp $(LIB_LAT).h
+	$(CPP11) $(CPPFLAGS) $(LIBFLAGS) -c $(LIB_LAT).cpp
 
 clean:
-	$(RM) -f $(EXE) $(OBJ) 
+	$(RM) -f $(EXE) $(OBJ)
+

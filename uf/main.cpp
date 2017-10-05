@@ -2,12 +2,13 @@
 #include "lattice.h"
 #include <cstdio>
 #include <cstdlib>
-#include <ctime>
+#include <sys/time.h>
 #include <cstdbool>
 #include <getopt.h>
 #include <ctype.h>
 
 #define OPTLIST "p:l:sb"
+
 bool pflag = false;
 bool sflag = false;
 bool bflag = false;
@@ -60,7 +61,7 @@ void start_union_find()
 	int early_exit;
 	init_qu_union_find(lat_size);
 	if(!bflag)
-		early_exit = perform_union_find(l, lat_size); //check if all cols percolate
+		early_exit = perform_union_find_multi_threaded(l, lat_size); //check if all cols percolate
 	else
 	{
 		BOND** b = get_bond_array();
@@ -89,20 +90,11 @@ void start_union_find()
 
 int main(int argc, char** argv)
 {
+	struct timeval start, end;
+	gettimeofday(&start, NULL);
 	int opt;
 	int lsiz;
-	//if(argc > 4)//compulsory args.
-	//{
-	//	try{
-	//		match_type = atoi(argv[argc-1]);
-	//		printf("numargs %d arg1 %s match_type=%d\n", argc, argv[1], match_type);
-	//		printf("%d\n",match_type);
-	//	}catch(...){
-	//		fprintf(stderr, "ERROR: Invalid Input!");
-	//		print_usage();
-	//		exit(1);
-	//	}
-	//}
+
 	while ((opt = getopt(argc,argv,OPTLIST)) != -1)
 	{
 		switch (opt)
@@ -148,5 +140,9 @@ int main(int argc, char** argv)
 	if(lflag)
 		lat_size = lsiz;
 	start_union_find();
+	gettimeofday(&end, NULL);
+	double delta = ((end.tv_sec - start.tv_sec) * 1000000u +
+							end.tv_usec - start.tv_usec) / 1.e6;
+	printf("---Time = %12.10fs---\n", delta);
 	return 0;
 }
