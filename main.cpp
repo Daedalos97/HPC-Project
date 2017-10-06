@@ -53,8 +53,9 @@ void start_search() {
 		} else {
 			seed_lattice_bonds(prob);
 		}
+		//print_lattice(lat_size,'v');
 		search_lattice();
-		print_lattice(lat_size,'v');
+		//print_lattice(lat_size,'v');
 		//lat_size = lat_size * 2;
 	//}
 }
