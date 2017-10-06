@@ -7,12 +7,14 @@
 #include <getopt.h>
 #include <ctype.h>
 
-#define OPTLIST "p:l:sb"
+#define OPTLIST "p:l:sbt:m"
 
 bool pflag = false;
 bool sflag = false;
 bool bflag = false;
 bool lflag = false;
+bool tflag = false;
+bool mflag = false;
 
 int match_type = 2;
 int lat_size = 2048;
@@ -57,24 +59,33 @@ void start_union_find()
 	else
 		seed_lattice_bonds(prob);
 	int** l = get_lattice_array();
-	//print_lattice(lat_size, 's');
+	if(lat_size <= 32){print_lattice(lat_size, 's');}
 	int early_exit;
 	init_qu_union_find(lat_size);
 	if(!bflag)
-		early_exit = perform_union_find_m_t_2(l, lat_size); //check if all cols percolate
+	{
+		// run sequentially
+		if(!mflag)
+			early_exit = perform_union_find(l, lat_size); //check if all cols percolate
+		else
+			early_exit = perform_union_find_m_t_2(l, lat_size);// run multithreaded
+	}
 	else
 	{
 		BOND** b = get_bond_array();
-		early_exit = perform_union_find_bond(b, l, lat_size);
+		if(!mflag)
+			early_exit = perform_union_find_bond(b, l, lat_size);
+		else
+			early_exit = perform_union_find_m_t_bond(b, l, lat_size);
 	}
 	perform_hoshen_kopelman_alg(l, lat_size);
-	//print_lattice(lat_size, 's');
+	if(lat_size <= 32){print_lattice(lat_size, 's');}
 	if(early_exit != -1)
 	{
 		//find_horizontal_percolation(l);
-		if(match_type == 0)
+		if(match_type == 1)
 			find_vertical_percolation(l, lat_size);
-		else if(match_type == 1)
+		else if(match_type == 0)
 			find_horizontal_percolation(l, lat_size);
 		else
 		{
@@ -90,8 +101,6 @@ void start_union_find()
 
 int main(int argc, char** argv)
 {
-	struct timeval start, end;
-	gettimeofday(&start, NULL);
 	int opt;
 	int lsiz;
 
@@ -109,6 +118,7 @@ int main(int argc, char** argv)
 					exit(EXIT_FAILURE);
 				}
 				break;
+
 			case 'l':
 				if (isdigit(optarg[0])){
 					lsiz = atoi(optarg);
@@ -119,8 +129,23 @@ int main(int argc, char** argv)
 					exit(EXIT_FAILURE);
 				}
 				break;
+
+			case 't':
+				if (isdigit(optarg[0])){
+					match_type = atoi(optarg);
+					tflag = true;
+				} else {
+					fprintf(stderr, "Invalid match type!\n");
+					print_usage();
+					exit(EXIT_FAILURE);
+				}
+				break;
+
 			case 's':
 				sflag = true;
+				break;
+			case 'm':
+				mflag = true;
 				break;
 			case 'b':
 				bflag = true;
@@ -139,10 +164,17 @@ int main(int argc, char** argv)
 	}
 	if(lflag)
 		lat_size = lsiz;
+
+	if(lat_size < 2){
+		fprintf(stderr, "Invalid argument. Lattice size should be atleast 2*2 or greater!\n");
+		exit(EXIT_FAILURE);
+	}
+	struct timeval start, end;
+	gettimeofday(&start, NULL);
 	start_union_find();
 	gettimeofday(&end, NULL);
 	double delta = ((end.tv_sec - start.tv_sec) * 1000000u +
 							end.tv_usec - start.tv_usec) / 1.e6;
-	printf("---Time = %12.10fs---\n", delta);
+	printf("-*- Time = %12.10fs -*-\n", delta);
 	return 0;
 }

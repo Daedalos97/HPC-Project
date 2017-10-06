@@ -286,10 +286,9 @@ int perform_union_find(int** lattice, int latsiz)
 int perform_union_find_m_t_2(int** lattice, int latsiz)
 {
 	no_sites_occupied = true;
-	#pragma omp parallel for schedule(static) num_threads(16)
+	#pragma omp parallel for schedule(static) num_threads(8) collapse(2)
 	for(int i = 0; i < latsiz; i++)
 	{
-		#pragma omp parallel for schedule(static) firstprivate(i) num_threads(16)
 		for(int j = 0; j < latsiz; j++)
 		{
 			if(lattice[i][j] ==1)
@@ -298,18 +297,12 @@ int perform_union_find_m_t_2(int** lattice, int latsiz)
 				//look up.
 				if(lattice[modulo(i-1, latsiz)][j] == 1)
 				{
-						//#pragma omp task
-						//{
-							quick_union(twoDto1D(modulo(i-1,latsiz), j, latsiz), twoDto1D(i, j, latsiz));
-						//}
+						quick_union(twoDto1D(modulo(i-1,latsiz), j, latsiz), twoDto1D(i, j, latsiz));
 				}
 				//look left.
 				if(lattice[i][modulo(j-1, latsiz)] == 1)
 				{
-						//#pragma omp task
-						//{
-							quick_union(twoDto1D(i, modulo(j-1, latsiz), latsiz), twoDto1D(i, j, latsiz));
-						//}
+						quick_union(twoDto1D(i, modulo(j-1, latsiz), latsiz), twoDto1D(i, j, latsiz));
 				}
 			}
 		}
@@ -394,6 +387,39 @@ int perform_union_find_multi_threaded(int** lattice, int latsiz)
 */
 int perform_union_find_bond(BOND** bonds, int** lattice, int latsiz)
 {
+	for(int i = 0; i < latsiz; i++)
+	{
+		for(int j = 0; j < latsiz; j++)
+		{
+			if(lattice[i][j] ==1)
+			{
+				//look up.
+				if(bonds[i][j].up == 1)
+					quick_union(twoDto1D(modulo(i-1,latsiz), j, latsiz), twoDto1D(i, j, latsiz));
+				//look left.
+				if(bonds[i][j].left == 1)
+					quick_union(twoDto1D(i, modulo(j-1, latsiz), latsiz), twoDto1D(i, j, latsiz));
+			}
+		}
+	}
+	populate_percolation_label_vector(latsiz);
+	std::sort(subtreeSize, len+subtreeSize);
+	printf("[#] largest cluster size = %d\n", subtreeSize[len-1]);
+	if(subtreeSize[len-1] < latsiz) {printf("[X] does NOT percolate!\n"); return -1;}
+	return 1;
+}
+
+
+
+/**
+* Perform union find to connect the sites into a Union Find search tree.
+* Returns -1 if we can establish that there are no percolations.
+* otherwise return 1.
+* Use for bond percolations.
+*/
+int perform_union_find_m_t_bond(BOND** bonds, int** lattice, int latsiz)
+{
+	#pragma omp parallel for schedule(static) num_threads(8) collapse(2)
 	for(int i = 0; i < latsiz; i++)
 	{
 		for(int j = 0; j < latsiz; j++)

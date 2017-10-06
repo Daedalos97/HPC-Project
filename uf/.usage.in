@@ -1,11 +1,12 @@
-usage: ./percolation -p prob -s|-b [-l siz arg]
+usage: ./percolation -p prob -s|-b [-m -l siz -t arg -n numthreads]
 
 options:
 -b 		Use bond percolation
 -p prob		Probability (bond/site)
 -s		Use site percolation
 -l siz		Lattice size (DEFAULT : 1024*1024)
-arg		Specify what type of percolation to search:
+-m 		Use multithreading. solves sequentially in NOT SPECIFIED!
+-t arg		Specify what type of percolation to search:
 			[0] A cluster that spans all rows.
 			[1] A cluster that spans all columns.
 			[2] A cluster that spans all rows and cols.

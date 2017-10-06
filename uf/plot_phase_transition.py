@@ -21,7 +21,7 @@ def plot_graph():
 # the output is then plotted using gnu-plot.
 # to plot the graph use gnuplot:
 # gnuplot '.plot_pref.gp' --persist
-def generate_data(perc_type):
+def generate_data(perc_type, mtarg):
     plotPref = open('.plot_pref.gp', 'w')
     f = open('.phase_transition.gp', 'w')
 
@@ -39,7 +39,7 @@ def generate_data(perc_type):
     for i in range (0, 100):
         numberOfPercolations = 0
         for j in range (0,100):
-            exe = "./percolation -l 128 -p "  + str(prob) +" -" + str(perc_type)
+            exe = "./percolation -l 128 -p "  + str(prob) +" -" + str(perc_type) + mtarg
             out =  str(subprocess.check_output(exe, shell=True))
             lines = out.count('[#]'); #if this is 1, only largest cluster was found successfully.
             if(lines > 1):
@@ -61,4 +61,9 @@ if __name__ == '__main__':
     if(not ((percol_type == "s") or (percol_type == "b"))):
         sys.stderr.write("ERROR: wrong input! must be s or b\n")
         sys.exit(1);
-    generate_data(percol_type)
+    mt = input("Use multithreading? [Y/n] (default: y)\n")
+    if(mt == 'n' or mt == 'N'):
+        generate_data(percol_type, ' ')
+    else:
+        generate_data(percol_type, ' -m')
+
