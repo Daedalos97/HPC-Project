@@ -10,8 +10,7 @@ and site percolation
 
 import sys;
 import subprocess;
-from os import system, remove;
-
+import pathlib;
 
 #plots the generated graph..
 def plot_graph():
@@ -34,7 +33,7 @@ def generate_data(perc_type):
         plotPref.write("set xlabel 'bond probability'\n")
     plotPref.write("set ylabel 'percolation found (%)'\n")
     #plotPref.write("set format x '%.2f'\n")
-    plotPref.write("plot '.phase_transition.gp' using 1:3 with lp\n")
+    plotPref.write("plot '.phase_transition.gp' using 1:3 with lp title 'phase transition'\n")
     plotPref.close()
     prob = 0.0
     for i in range (0, 100):
@@ -54,6 +53,10 @@ def generate_data(perc_type):
 
 
 if __name__ == '__main__':
+    exefile = pathlib.Path("./percolation")
+    if(not exefile.is_file()):
+        sys.stderr.write("ERROR: exe not found.. Please build the project using the Makefile.\n")
+        sys.exit(1);
     percol_type = input("Enter percolation type site or bond.. [s/b]?\n")
     if(not ((percol_type == "s") or (percol_type == "b"))):
         sys.stderr.write("ERROR: wrong input! must be s or b\n")

@@ -286,10 +286,10 @@ int perform_union_find(int** lattice, int latsiz)
 int perform_union_find_m_t_2(int** lattice, int latsiz)
 {
 	no_sites_occupied = true;
-	#pragma omp parallel for schedule(static)
+	#pragma omp parallel for schedule(static) num_threads(16)
 	for(int i = 0; i < latsiz; i++)
 	{
-		#pragma omp parallel for schedule(static) firstprivate(i)
+		#pragma omp parallel for schedule(static) firstprivate(i) num_threads(16)
 		for(int j = 0; j < latsiz; j++)
 		{
 			if(lattice[i][j] ==1)
@@ -298,12 +298,18 @@ int perform_union_find_m_t_2(int** lattice, int latsiz)
 				//look up.
 				if(lattice[modulo(i-1, latsiz)][j] == 1)
 				{
-						quick_union(twoDto1D(modulo(i-1,latsiz), j, latsiz), twoDto1D(i, j, latsiz));
+						//#pragma omp task
+						//{
+							quick_union(twoDto1D(modulo(i-1,latsiz), j, latsiz), twoDto1D(i, j, latsiz));
+						//}
 				}
 				//look left.
 				if(lattice[i][modulo(j-1, latsiz)] == 1)
 				{
-					quick_union(twoDto1D(i, modulo(j-1, latsiz), latsiz), twoDto1D(i, j, latsiz));
+						//#pragma omp task
+						//{
+							quick_union(twoDto1D(i, modulo(j-1, latsiz), latsiz), twoDto1D(i, j, latsiz));
+						//}
 				}
 			}
 		}
