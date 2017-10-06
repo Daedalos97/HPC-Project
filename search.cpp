@@ -77,15 +77,15 @@ void check_cluster_linear() {
 							lat.bond_array[(i+lat_size-1)%lat_size][j].visited = 2;
 							stack.push(new_node);
 						}
-						if (b.left == 1 && lat.bond_array[i][(j+1)%lat_size].visited != 2) {
-							NODE new_node = {i,(j+1)%lat_size};
-							lat.bond_array[i][(j+1)%lat_size].visited = 2;
-							stack.push(new_node);	
-						}
-						if (b.right == 1 && lat.bond_array[i][(j+lat_size-1)%lat_size].visited != 2) {
+						if (b.left == 1 && lat.bond_array[i][(j+lat_size-1)%lat_size].visited != 2) {
 						 	NODE new_node = {i, (j+lat_size-1)%lat_size};
 						 	lat.bond_array[i][(j+lat_size-1)%lat_size].visited = 2;
 							stack.push(new_node);
+						}
+						if (b.right == 1 && lat.bond_array[i][(j+1)%lat_size].visited != 2) {
+							NODE new_node = {i,(j+1)%lat_size};
+							lat.bond_array[i][(j+1)%lat_size].visited = 2;
+							stack.push(new_node);	
 						}
 						if (b.down == 1 && lat.bond_array[(i+1)%lat_size][j].visited != 2) {
 							NODE new_node = {(i+1)%lat_size,j};
@@ -166,30 +166,30 @@ void dfs(SUB_LAT sub) {
 								NODE new_node = {i,(j+1)%lat_size};
 								sub.bonds[i][(j+1)%lat_size].visited= 2;
 								S.push(new_node);
-							} /*else {
-								//Bond Percolation
-								BOND b = lat.bond_array[i][j];
-								if (b.up && lat.bond_array[(i+size-1)%size][j].visited != 1) {
-									NODE new_node = {(i+size-1)%size,j};
-									lat.bond_array[(i+size-1)%size][j].visited = 2;
-									S.push(new_node);
-								}
-								if (b.left && lat.bond_array[i][(j+1)%lat_size].visited != 1) {
-									NODE new_node = {i,(j+1)%lat_size};
-									lat.bond_array[i][(j+1)%lat_size].visited = 2;
-									S.push(new_node);	
-								}
-								if (b.right && lat.bond_array[i][(j+lat_size-1)%lat_size].visited != 1) {
-								 	NODE new_node = {i, (j+lat_size-1)%lat_size};
-								 	lat.bond_array[i][(j+lat_size-1)%lat_size].visited = 2;
-									S.push(new_node);
-								}
-								if (b.down && lat.bond_array[(i+1)%size][j].visited != 1) {
-									NODE new_node = {(i+1)%size,j};
-									lat.bond_array[(i+1)%size][j].visited = 2;
-									S.push(new_node);
-								}
-							}*/
+							}
+						} else {
+							//Bond Percolation
+							BOND b = sub.bonds[i][j];
+							if (b.up && sub.bonds[(i-1)][j].visited != 2) {
+								NODE new_node = {i-1,j};
+								sub.bonds[i-1][j].visited = 2;
+								S.push(new_node);
+							}
+							if (b.left && sub.bonds[i][(j+lat_size-1)%lat_size].visited != 2) {
+							 	NODE new_node = {i, (j+lat_size-1)%lat_size};
+							 	sub.bonds[i][(j+lat_size-1)%lat_size].visited = 2;
+								S.push(new_node);
+							}
+							if (b.right && sub.bonds[i][(j+1)%lat_size].visited != 2) {
+								NODE new_node = {i,(j+1)%lat_size};
+								sub.bonds[i][(j+1)%lat_size].visited = 2;
+								S.push(new_node);	
+							}
+							if (b.down && sub.bonds[i+1][j].visited != 2) {
+								NODE new_node = {i+1,j};
+								sub.bonds[i+1][j].visited = 2;
+								S.push(new_node);
+							}
 						}
 					}
 				}
@@ -250,55 +250,4 @@ void check_cluster() {
 	for (int i = 1; i < 8; i++) {
 		combine(&largest_cluster, &percolates, (i*arr_split)-1);
 	}
-
-
 }
-						//Prioritise Down and Right Movement.
-						//Site Percolation
-					
-					/*else {
-							//Bond Percolation
-							BOND b = lat.bond_array[i][j];
-							if (b.up == 1 && lat.bond_array[(i+lat_size-1)%lat_size][j].visited == 1) {
-								NODE new_node = {(i+lat_size-1)%lat_size,j};
-								lat.bond_array[(i+lat_size-1)%lat_size][j].visited = 2;
-								S.push(new_node);
-							}
-							if (b.left == 1 && lat.bond_array[i][(j+1)%lat_size].visited == 1) {
-								NODE new_node = {i,(j+1)%lat_size};
-								lat.bond_array[i][(j+1)%lat_size].visited = 2;
-								S.push(new_node);	
-							}
-							if (b.right == 1 && lat.bond_array[i][(j+lat_size-1)%lat_size].visited == 1) {
-							 	NODE new_node = {i, (j+lat_size-1)%lat_size};
-							 	lat.bond_array[i][(j+lat_size-1)%lat_size].visited = 2;
-								S.push(new_node);
-							}
-							if (b.down == 1 && lat.bond_array[(i+1)%lat_size][j].visited == 1) {
-								NODE new_node = {(i+1)%lat_size,j};
-								lat.bond_array[(i+1)%lat_size][j].visited = 2;
-								S.push(new_node);
-							}
-						}
-
-					for (int m = 0; m < lat_size; m++) {
-						if (horiz[m]) {
-							horiz_sum++;
-							horiz[m] = 0;
-						}
-						if (verti[m]) {
-							verti_sum++;
-							verti[m] = 0;
-						}
-					}
-					//Shouldnt need critical as all other threads are suspended temporarily.
-					if (node_sum > largest_cluster) {
-						largest_cluster = node_sum;
-					}
-					if (horiz_sum == lat_size && verti_sum == lat_size && matchtype == 2) {
-						printf("Percolates Horizontally & Vertically!\n");
-					} else if (horiz_sum == lat_size && matchtype == 1) {
-						printf("Percolates Horizontally!\n");
-					} else if (verti_sum == lat_size && matchtype == 0) {
-						printf("\nPercolates Vertically!\n");
-					}*/
