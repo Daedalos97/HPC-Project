@@ -9,6 +9,7 @@
 #include <ctime>
 #include <getopt.h>
 #include <ctype.h>
+#include <sys/time.h>
 
 #define OPTLIST "p:sbl:t:"
 bool pflag = false;
@@ -45,19 +46,19 @@ void print_usage()
 }
 
 void start_search() {
-	//while (lat_size <= 256) {
-		init_lattice();
-		//Check if we are looking for the site percolation or bond.
-		if (sflag) {
-			seed_lattice_sites(prob);
-		} else {
-			seed_lattice_bonds(prob);
-		}
-		//print_lattice(lat_size,'v');
-		search_lattice();
-		//print_lattice(lat_size,'v');
-		//lat_size = lat_size * 2;
-	//}
+	init_lattice();
+	//Check if we are looking for the site percolation or bond.
+	if (sflag) {
+		seed_lattice_sites(prob);
+	} else {
+		seed_lattice_bonds(prob);
+	}
+	struct timeval start,end;
+	gettimeofday(&start,NULL);
+	search_lattice();
+	gettimeofday(&end,NULL);
+	double delta = ((end.tv_sec-start.tv_sec)* 1000000u+ end.tv_usec - start.tv_usec)/1.e6;
+	printf("%12.10f\n", delta);
 }
 
 //compile project:

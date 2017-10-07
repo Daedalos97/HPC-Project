@@ -5,7 +5,7 @@
 int largest_cluster = 0;
 int node_sum;
 bool percolate = false;
-const int threads = 8;
+const int threads = 2;
 
 void search_lattice() {
 	check_cluster();
@@ -139,7 +139,7 @@ void sublattice_search(struct sub_lat* sub) {
 					sub->clusters.at(cluster_count-1).push_back(node);
 					S.pop();
 					//i1-1 is allocated limit
-					if ((i >= i0 && i <= i1-1)) {
+					if ((i >= i0 && i < i1)) {
 						if (sflag) {
 							if (i-1 >= i0 && lat.bond_array[i-1][j].visited == 1) {
 								NODE new_node = {i-1,j};
@@ -151,7 +151,7 @@ void sublattice_search(struct sub_lat* sub) {
 							 	lat.bond_array[i][(j+lat_size-1)%lat_size].visited = 2;
 								S.push(new_node);
 							}
-							if (i+1 < i1-1 && lat.bond_array[i+1][j].visited == 1) {
+							if (i+1 < i1 && lat.bond_array[i+1][j].visited == 1) {
 								NODE new_node = {i+1,j};
 								lat.bond_array[i+1][j].visited = 2;
 								S.push(new_node);
@@ -179,7 +179,7 @@ void sublattice_search(struct sub_lat* sub) {
 								lat.bond_array[i][(j+1)%lat_size].visited = 2;
 								S.push(new_node);	
 							}
-							if (i+1 < i1-1 && b.down && lat.bond_array[i+1][j].visited != 2) {
+							if (i+1 < i1 && b.down && lat.bond_array[i+1][j].visited != 2) {
 								NODE new_node = {i+1,j};
 								lat.bond_array[i+1][j].visited = 2;
 								S.push(new_node);
@@ -199,35 +199,29 @@ void merge_clusters(struct sub_lat* lat1, struct sub_lat* lat2) {
 	for (i = 0; i < lat_size; i++) {
 		if (sflag) {
 			if (lat.bond_array[lat1->x1-1][i].visited == 2 && lat.bond_array[(lat2->x)%lat_size][i].visited == 2) {
-				//printf("%d-%d  %d\n", lat1->x1-1,lat2->x, i);
-				int idx1 = lat1->bot_edge[i]-1,idx2 = lat2->top_edge[i]-1;
-				if (idx2>0 && idx1 > 0) {
-					//printf("\n%d  %d\n", (int)lat1->clusters[idx1].size(), (int)lat2->clusters[idx2].size());
+				int idx1 = lat1->bot_edge[i]-1, idx2 = lat2->top_edge[i]-1;
+				if (idx2>=0 && idx1 >= 0) {
 					lat1->clusters[idx1].insert(std::end(lat1->clusters[idx1]), std::begin(lat2->clusters[idx2]), std::end(lat2->clusters[idx2]));
 					lat2->clusters[idx2].resize(0);
-					//printf("\n%d\n", (int)lat1->clusters[idx1].size());
 				}
 				
 			}
 		} else {
 			//Checks a bond exists between these points
 			if (lat.bond_array[lat1->x-1][i].down == 1 && lat.bond_array[lat1->x1-1][i].visited == 2 && lat.bond_array[(lat2->x)%lat_size][i].visited == 2) {
-				//printf("%d-%d  %d\n", lat1->x1-1,lat2->x, i);
 				int idx1 = lat1->bot_edge[i]-1,idx2 = lat2->top_edge[i]-1;
-				if (idx2>0 && idx1 > 0) {
-					//printf("\n%d  %d\n", (int)lat1->clusters[idx1].size(), (int)lat2->clusters[idx2].size());
-					lat1->clusters[idx1].insert(std::end(lat1->clusters[idx1]), std::begin(lat2->clusters[idx2]), std::end(lat2->clusters[idx2]));
-					lat2->clusters[idx2].resize(0);
-					//printf("\n%d\n", (int)lat1->clusters[idx1].size());
+				if (idx2 >= 0 && idx1 >= 0) {
+					lat2->clusters[idx2].insert(std::end(lat2->clusters[idx2]), std::begin(lat1->clusters[idx1]), std::end(lat1->clusters[idx1]));
+					lat1->clusters[idx1].resize(0);
 				}
 			}
 		}
 	}
 }
 
-void percolates(bool perc,struct sub_lat* lats, int num_lat) {
+void percolates(bool perc,std::vector<struct sub_lat> lats, int num_lat) {
 	int i,j,k;
-	#pragma omp parallel for num_threads(4) shared(largest_cluster)
+	//#pragma omp parallel for num_threads(4) shared(largest_cluster)
 		for (i = 0; i < num_lat; i++) {
 			for (j = 0; j < (int)lats[i].clusters.size(); j++) {
 				//printf("%d\n",(int)sub.clusters[j].size());
@@ -270,7 +264,6 @@ struct sub_lat* create_sub_lat(int i0, int i1) {
 	struct sub_lat* sub = (sub_lat*) malloc(sizeof(sub_lat));
 	sub->x = i0;
 	sub->x1 = i1;
-	
 	sub->bot_edge = (short*) malloc(lat_size*sizeof(short*));
 	sub->top_edge = (short*) malloc(lat_size*sizeof(short*));
 
@@ -283,18 +276,33 @@ struct sub_lat* create_sub_lat(int i0, int i1) {
 
 void check_cluster() {
 	int arr_split = lat_size/threads;
-	struct sub_lat* storage = (sub_lat*)malloc(threads*sizeof(struct sub_lat));
+	std::vector<struct sub_lat> storage(threads);
 	#pragma omp parallel num_threads(threads)
 	{
 		short th = omp_get_thread_num();
 		struct sub_lat* sub = create_sub_lat(arr_split*th,arr_split*(th+1)); // Creates sub lattice, then DFS it and combine with actual lattice
 		sublattice_search(sub); //searches through its given sublattice
-		storage[th] = *sub;
+		storage.at(th) = *sub;
 	}
 
-//CHECK THIS!!!!!!
-	for (int i = 0; i < threads; i++) {
+	for (int i = 0; i < threads-1; i++) {
 		merge_clusters(&storage[i],&storage[(i+1)%threads]);
 	}
+	//Merge last with first
+	merge_clusters(&storage[(threads-1)], &storage[0]);
+
+/*
+	printf("\nCluster Output\n");
+	for (int k = 0; k < threads; k++) {
+		printf("Grid: %d\n", k);
+		for (int i = 0; i < (int)storage[k].clusters.size(); i++){
+			printf("Cluster: %d - size: %d\n", i, (int)storage[k].clusters[i].size());
+			//for (int j = 0; j < (int)storage[k].clusters[i].size(); j++) {
+				NODE n = storage[k].clusters[i].at(j);
+				printf("%d  %d\n",n.position[0],n.position[1]);
+			//}
+		}
+	}*/
+
 	percolates(percolate, storage, threads);
 }
