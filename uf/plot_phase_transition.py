@@ -39,7 +39,7 @@ def generate_data(perc_type, mtarg):
     for i in range (0, 100):
         numberOfPercolations = 0
         for j in range (0,100):
-            exe = "./percolation -l 128 -p "  + str(prob) +" -" + str(perc_type) + mtarg
+            exe = "./percolation -l 256 -p "  + str(prob) +" -" + str(perc_type) + mtarg
             out =  str(subprocess.check_output(exe, shell=True))
             lines = out.count('[#]'); #if this is 1, only largest cluster was found successfully.
             if(lines > 1):
@@ -47,6 +47,7 @@ def generate_data(perc_type, mtarg):
         outstring = str(prob) + " , " + str(numberOfPercolations)+"\n"
         f.write(outstring);
         prob+=0.01
+    plotPref.close()
     f.close()
     plot_graph()
 
@@ -66,4 +67,3 @@ if __name__ == '__main__':
         generate_data(percol_type, ' ')
     else:
         generate_data(percol_type, ' -m')
-

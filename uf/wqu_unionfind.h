@@ -1,9 +1,9 @@
 #ifndef WEIGHTED_QUICK_UNION_UNION_FIND_H
 #define WEIGHTED_QUICK_UNION_UNION_FIND_H
 
-#include <cstdlib>
-#include <cstdio>
-#include <cstdbool>
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdbool.h>
 #include <algorithm>
 #include <vector>
 #include <omp.h>

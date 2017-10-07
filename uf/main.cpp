@@ -1,9 +1,9 @@
 #include "wqu_unionfind.h"
 #include "lattice.h"
-#include <cstdio>
-#include <cstdlib>
+#include <stdio.h>
+#include <stdlib.h>
 #include <sys/time.h>
-#include <cstdbool>
+#include <stdbool.h>
 #include <getopt.h>
 #include <ctype.h>
 
@@ -175,6 +175,6 @@ int main(int argc, char** argv)
 	gettimeofday(&end, NULL);
 	double delta = ((end.tv_sec - start.tv_sec) * 1000000u +
 							end.tv_usec - start.tv_usec) / 1.e6;
-	printf("-*- Time = %12.10fs -*-\n", delta);
+	printf("%12.10f\n", delta);
 	return 0;
 }

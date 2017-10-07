@@ -1,10 +1,10 @@
 #ifndef LATTICE_H_INCLUDED
 #define LATTICE_H_INCLUDED
 
-#include <cstdio>
-#include <cstdlib>
-#include <ctime>
-#include <cstdbool>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <stdbool.h>
 
 
 typedef struct bond {
