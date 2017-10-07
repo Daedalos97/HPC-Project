@@ -15,7 +15,7 @@ typedef struct node {
 
 struct sub_lat
 {
-	BOND** bonds;
+	//BOND** bonds;
 	int x, x1; //The extent of the division of the lattice.
 	int** clust;
 	std::vector<std::vector<NODE>> clusters; //keeps list of all clusters of a lattice

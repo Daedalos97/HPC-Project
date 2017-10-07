@@ -119,10 +119,6 @@ int main(int argc, char** argv)
 		fprintf(stderr, "No percolation probability given.\n");
 		print_usage();
 		exit(EXIT_FAILURE);
-	} else if (!percflag) {
-		fprintf(stderr, "No Percolation Type Given. Please enter a number between 0 and 2.\nWhere 0 is a cluster that percolates across all rows,");
-		fprintf(stderr,"1 is a cluster that percolates all columns, 2 is a cluster percolating across all rows and columns");
-		exit(EXIT_FAILURE);
 	}
 	if(lflag)
 		lat_size = lsiz;
