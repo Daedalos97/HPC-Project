@@ -3,12 +3,18 @@
 #include <stack>
 
 int largest_cluster = 0;
-//std::stack<NODE> S;
 int node_sum;
+bool percolate = false;
+const int threads = 8;
 
 void search_lattice() {
-	check_cluster_linear();
-	printf("Largest Cluster is %d nodes\n", largest_cluster);
+	check_cluster();
+	printf("[#] Largest Cluster: %d\n", largest_cluster);
+	if (percolate) {
+		printf("[+] Percolates.\n");
+	} else {
+		printf("[X] Does not percolate.\n");
+	}
 }
 
 void check_cluster_linear() {
@@ -93,12 +99,11 @@ void check_cluster_linear() {
 				}
 				if (node_sum > largest_cluster) largest_cluster = node_sum;
 				if (horiz_sum == lat_size && verti_sum == lat_size && matchtype == 2) {
-					printf("Percolates Horizontally & Vertically!\n");
+					percolate = true;
 				} else if (horiz_sum == lat_size && matchtype == 1) {
-					printf("Percolates Horizontally!\n");
+					percolate = true;
 				} else if (verti_sum == lat_size && matchtype == 0) {
-					printf("\nPercolates Vertically!\n");
-				} else {
+					percolate = true;
 				}
 			}
 		}
@@ -133,29 +138,24 @@ void sublattice_search(struct sub_lat* sub) {
 
 					sub->clusters.at(cluster_count-1).push_back(node);
 					S.pop();
-					//THIS EXCLUDES SOME OF THE TOP ROW
 					//i1-1 is allocated limit
 					if ((i >= i0 && i <= i1-1)) {
 						if (sflag) {
-							//printf("Thread %d: %d %d\n",thread, (i-1),j);
 							if (i-1 >= i0 && lat.bond_array[i-1][j].visited == 1) {
 								NODE new_node = {i-1,j};
 								lat.bond_array[i-1][j].visited = 2;
 								S.push(new_node);
 							}
-							//printf("Thread %d: %d %d\n", thread, i,(j+lat_size-1)%lat_size);
 							if (lat.bond_array[i][(j+lat_size-1)%lat_size].visited == 1) {
 							 	NODE new_node = {i, (j+lat_size-1)%lat_size};
 							 	lat.bond_array[i][(j+lat_size-1)%lat_size].visited = 2;
 								S.push(new_node);
 							}
-							//printf("Thread %d: %d %d\n",thread, i+1,j);
 							if (i+1 < i1-1 && lat.bond_array[i+1][j].visited == 1) {
 								NODE new_node = {i+1,j};
 								lat.bond_array[i+1][j].visited = 2;
 								S.push(new_node);
 							}
-							//printf("Thread %d: %d %d\n", thread,i,(j+1)%lat_size);
 							if (lat.bond_array[i][(j+1)%lat_size].visited == 1) {
 								NODE new_node = {i,(j+1)%lat_size};
 								lat.bond_array[i][(j+1)%lat_size].visited= 2;
@@ -187,26 +187,17 @@ void sublattice_search(struct sub_lat* sub) {
 						}
 					}
 				}
-				//printf("%ld\n", sub->clusters[cluster_count-1].size());
 				cluster_count++;
 			}
 		}
 	}
 }
 
-//Adds the sub lat to lat.bond_array
-void combine_lats(struct sub_lat* sub) {
-	for (int i = 0; i < (sub->x1)-(sub->x); i++) {
-		//memcpy(&lat.bond_array[i+sub->x], &sub->bonds[i], lat_size*sizeof(BOND));
-	}
-}
-
 //Combine sections on the bottom of the sections of work
 void merge_clusters(struct sub_lat* lat1, struct sub_lat* lat2) {
 	int i;
-	//int split = lat1.x1-lat1.x;
-	//#pragma omp parallel for num_threads(4) shared(lat1, lat2) schedule(static,split)
-		for (i = 0; i < lat_size; i++) {
+	for (i = 0; i < lat_size; i++) {
+		if (sflag) {
 			if (lat.bond_array[lat1->x1-1][i].visited == 2 && lat.bond_array[(lat2->x)%lat_size][i].visited == 2) {
 				//printf("%d-%d  %d\n", lat1->x1-1,lat2->x, i);
 				int idx1 = lat1->bot_edge[i]-1,idx2 = lat2->top_edge[i]-1;
@@ -218,30 +209,41 @@ void merge_clusters(struct sub_lat* lat1, struct sub_lat* lat2) {
 				}
 				
 			}
+		} else {
+			//Checks a bond exists between these points
+			if (lat.bond_array[lat1->x-1][i].down == 1 && lat.bond_array[lat1->x1-1][i].visited == 2 && lat.bond_array[(lat2->x)%lat_size][i].visited == 2) {
+				//printf("%d-%d  %d\n", lat1->x1-1,lat2->x, i);
+				int idx1 = lat1->bot_edge[i]-1,idx2 = lat2->top_edge[i]-1;
+				if (idx2>0 && idx1 > 0) {
+					//printf("\n%d  %d\n", (int)lat1->clusters[idx1].size(), (int)lat2->clusters[idx2].size());
+					lat1->clusters[idx1].insert(std::end(lat1->clusters[idx1]), std::begin(lat2->clusters[idx2]), std::end(lat2->clusters[idx2]));
+					lat2->clusters[idx2].resize(0);
+					//printf("\n%d\n", (int)lat1->clusters[idx1].size());
+				}
+			}
 		}
+	}
 }
 
 void percolates(bool perc,struct sub_lat* lats, int num_lat) {
-	//printf("\n");
 	int i,j,k;
-	//#pragma omp parallel for num_threads(8) shared(largest_cluster)
+	#pragma omp parallel for num_threads(4) shared(largest_cluster)
 		for (i = 0; i < num_lat; i++) {
-			struct sub_lat sub = lats[i];
-			for (j = 0; j < (int)sub.clusters.size(); j++) {
+			for (j = 0; j < (int)lats[i].clusters.size(); j++) {
 				//printf("%d\n",(int)sub.clusters[j].size());
-				if ((int)sub.clusters[j].size() > largest_cluster) {
+				if ((int)lats[i].clusters[j].size() > largest_cluster) {
 					#pragma omp critical
 					{
-						largest_cluster = sub.clusters[j].size();
+						largest_cluster = lats[i].clusters[j].size();
 					}
 				}
-				if ((int)sub.clusters[j].size() > lat_size) {
+				if ((int)lats[i].clusters[j].size() > lat_size) {
 					char* horiz = (char*) malloc(lat_size*sizeof(char));
 					char* verti = (char*) malloc(lat_size*sizeof(char));
 					int hori_sum = 0;
 					int vert_sum = 0;
-						for (k = 0; k < (int)sub.clusters[j].size(); k++) {
-							NODE n = sub.clusters.at(j).at(k);
+						for (k = 0; k < (int)lats[i].clusters[j].size(); k++) {
+							NODE n = lats[i].clusters.at(j).at(k);
 							if (!horiz[n.position[1]]) {
 								horiz[n.position[1]] = 1;
 								hori_sum++;
@@ -268,27 +270,18 @@ struct sub_lat* create_sub_lat(int i0, int i1) {
 	struct sub_lat* sub = (sub_lat*) malloc(sizeof(sub_lat));
 	sub->x = i0;
 	sub->x1 = i1;
-	//sub->bonds = (BOND**) malloc((i1-i0)*sizeof(BOND*));
+	
 	sub->bot_edge = (short*) malloc(lat_size*sizeof(short*));
 	sub->top_edge = (short*) malloc(lat_size*sizeof(short*));
 
-	/*for (int m = 0; m < (i1-i0); m++) {
-		sub->bonds[m] = (BOND*) malloc(lat_size*sizeof(BOND));
-		memcpy(&sub->bonds[m], &lat.bond_array[i0+m], sizeof(BOND)*lat_size);
-	}*/
-
-	//FOR TEST PURPOSES
-	
-		for (int j = 0; j < lat_size; j++) {
-			sub->bot_edge[j] = 0;
-			sub->top_edge[j] = 0;
-		}
+	for (int j = 0; j < lat_size; j++) {
+		sub->bot_edge[j] = 0;
+		sub->top_edge[j] = 0;
+	}
 	return sub;
 }
 
 void check_cluster() {
-	bool percol = false; // false
-	const int threads = 8;
 	int arr_split = lat_size/threads;
 	struct sub_lat* storage = (sub_lat*)malloc(threads*sizeof(struct sub_lat));
 	#pragma omp parallel num_threads(threads)
@@ -303,9 +296,5 @@ void check_cluster() {
 	for (int i = 0; i < threads; i++) {
 		merge_clusters(&storage[i],&storage[(i+1)%threads]);
 	}
-	percolates(percol, storage, threads);
-
-	if (percol) {
-		printf("Percolates\n");
-	}
+	percolates(percolate, storage, threads);
 }
