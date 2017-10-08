@@ -1,4 +1,4 @@
-set title 'CPU time vs. Lattice size for sequential and multithreaded solutions using Depth First Search.'
-set xlabel 'Lattice Size (n*n)'
-set ylabel 'CPU time (s)'
-plot '.seq.gp' using 1:3 with lp title 'site percolation (sequential)', '.mt.gp' using 1:3 with lp title 'site percolation (multithreaded)'
+set title 'Site percolation : percolation probability vs. % of percolations'
+set xlabel 'site probability'
+set ylabel 'percolation found (%)'
+plot '.phase_transition.gp' using 1:3 with lp title 'phase transition'

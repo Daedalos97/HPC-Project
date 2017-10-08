@@ -5,7 +5,7 @@
 int largest_cluster = 0;
 int node_sum;
 bool percolate = false;
-const int threads = 4;
+const int threads = 2;
 
 void dfs_traversal() {
 	if (mflag) {
