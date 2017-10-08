@@ -5,14 +5,14 @@
 int largest_cluster = 0;
 int node_sum;
 bool percolate = false;
-const int threads = 2;
+const int threads = 4;
 
 void dfs_traversal() {
 	if (mflag) {
 		check_cluster_multithreaded();
 		printf("[#] Largest Cluster: %d\n", largest_cluster);
 		if (percolate) {
-			printf("[+] Percolates.\n");
+			printf("[#] Percolates.\n");
 		} else {
 			printf("[X] Does not percolate.\n");
 		}
@@ -20,7 +20,7 @@ void dfs_traversal() {
 		check_cluster_linear();
 		printf("[#] Largest Cluster: %d\n", largest_cluster);
 		if (percolate) {
-			printf("[+] Percolates.\n");
+			printf("[#] Percolates.\n");
 		} else {
 			printf("[X] Does not percolate.\n");
 		}
@@ -219,7 +219,7 @@ void merge_clusters(struct sub_lat* lat1, struct sub_lat* lat2) {
 			}
 		} else {
 			//Checks a bond exists between these points
-			if (lat.bond_array[lat1->x-1][i].down == 1 && lat.bond_array[lat1->x1-1][i].visited == 2 && lat.bond_array[(lat2->x)%lat_size][i].visited == 2) {
+			if (lat.bond_array[lat1->x1-1][i].down == 1 && lat.bond_array[lat1->x1-1][i].visited == 2 && lat.bond_array[(lat2->x)%lat_size][i].visited == 2) {
 				int idx1 = lat1->bot_edge[i]-1,idx2 = lat2->top_edge[i]-1;
 				if (idx2 >= 0 && idx1 >= 0) {
 					lat2->clusters[idx2].insert(std::end(lat2->clusters[idx2]), std::begin(lat1->clusters[idx1]), std::end(lat1->clusters[idx1]));
