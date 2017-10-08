@@ -23,9 +23,10 @@ struct sub_lat
 };
 
 extern int matchtype;
+extern bool mflag;
 
-void search_lattice();
-void check_cluster();
+void dfs_traversal();
+void check_cluster_multithreaded();
 void check_cluster_linear();
 
 #endif
