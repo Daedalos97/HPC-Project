@@ -3,7 +3,7 @@
 '''''''''
 A python script that generates plots of number of percolation out of 50 tries
 from ranging probabilities 0.0 to 1.0 at increments of 0.01 for a lattice
-of size 128*128.
+of size 256*256.
 We can use this to estimate the critical threshold probabilities for bond
 and site percolation
 '''''''''
@@ -39,7 +39,7 @@ def generate_data(perc_type, mtarg):
     for i in range (0, 100):
         numberOfPercolations = 0
         for j in range (0,100):
-            exe = "./percolation -l 256 -p "  + str(prob) +" -" + str(perc_type) + mtarg
+            exe = "./percol -l 256 -p "  + str(prob) +" -" + str(perc_type) + mtarg
             out =  str(subprocess.check_output(exe, shell=True))
             lines = out.count('[#]'); #if this is 1, only largest cluster was found successfully.
             if(lines > 1):
@@ -53,7 +53,7 @@ def generate_data(perc_type, mtarg):
 
 
 if __name__ == '__main__':
-    exefile = pathlib.Path("./percolation")
+    exefile = pathlib.Path("./percol")
     if(not exefile.is_file()):
         sys.stderr.write("ERROR: exe not found.. Please build the project using the Makefile.\n")
         sys.exit(1);
