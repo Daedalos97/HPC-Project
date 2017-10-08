@@ -18,10 +18,8 @@ bool bflag = false;
 bool lflag = false;
 bool percflag = false;
 
-int matchtype = 2;
-int lat_size = 4;
-
-
+int matchtype;
+int lat_size = 1024;
 
 /**
  * Incase of invalid command line input from user, print usage.
@@ -102,27 +100,34 @@ int main(int argc, char** argv)
 					matchtype = atoi(optarg);
 					percflag = true;
 				} else {
+					print_usage();
+					exit(EXIT_FAILURE);
 					fprintf(stderr, "Invalid percolation type argument enter a number between 0 and 2.\n");
 				}
 				break;
 			case '?': fprintf(stderr, "Invalid command.\n"); print_usage(); exit(EXIT_FAILURE);
 		}
 	}
-	if (matchtype < 0 && matchtype > 2) {
+	if (!percflag) {
+		matchtype = 2;
+	}
+	if (matchtype < 0 || matchtype > 2) {
 		fprintf(stderr, "Invalid Percolation Type Chosen.\n");
+		print_usage();
 		exit(EXIT_FAILURE);
 	}
 	if (sflag == bflag) {
 		fprintf(stderr, "You need only one -s or -b flag for either site or bond percolation.\n");
 		print_usage();
 		exit(EXIT_FAILURE);
-	} else if (!pflag) {
+	}
+	if (!pflag) {
 		fprintf(stderr, "No percolation probability given.\n");
 		print_usage();
 		exit(EXIT_FAILURE);
 	}
-	if(lflag)
-		lat_size = lsiz;
+	if(lflag) lat_size = lsiz;
+
 	start_search();
 	exit(EXIT_SUCCESS);
 }

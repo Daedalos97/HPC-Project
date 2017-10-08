@@ -5,7 +5,7 @@
 int largest_cluster = 0;
 int node_sum;
 bool percolate = false;
-const int threads = 2;
+const int threads = 4;
 
 void search_lattice() {
 	check_cluster();
@@ -26,6 +26,7 @@ void check_cluster_linear() {
 		for (int l = 0; l < lat_size; l++) {
 			if (lat.bond_array[k][l].visited == 1) {
 				node_sum = 0;
+				//zeros arrays
 				int horiz_sum = 0;
 				int verti_sum = 0;
 				for (int i = 0; i < lat_size; i++) {
@@ -219,44 +220,46 @@ void merge_clusters(struct sub_lat* lat1, struct sub_lat* lat2) {
 	}
 }
 
-void percolates(bool perc,std::vector<struct sub_lat> lats, int num_lat) {
+void percolates(bool* perc,std::vector<struct sub_lat> lats, int num_lat) {
 	int i,j,k;
-	//#pragma omp parallel for num_threads(4) shared(largest_cluster)
-		for (i = 0; i < num_lat; i++) {
-			for (j = 0; j < (int)lats[i].clusters.size(); j++) {
-				//printf("%d\n",(int)sub.clusters[j].size());
+	for (i = 0; i < num_lat; i++) {
+		for (j = 0; j < (int)lats[i].clusters.size(); j++) {
+			#pragma omp critical
+			{
 				if ((int)lats[i].clusters[j].size() > largest_cluster) {
-					#pragma omp critical
-					{
-						largest_cluster = lats[i].clusters[j].size();
-					}
-				}
-				if ((int)lats[i].clusters[j].size() > lat_size) {
-					char* horiz = (char*) malloc(lat_size*sizeof(char));
-					char* verti = (char*) malloc(lat_size*sizeof(char));
-					int hori_sum = 0;
-					int vert_sum = 0;
-						for (k = 0; k < (int)lats[i].clusters[j].size(); k++) {
-							NODE n = lats[i].clusters.at(j).at(k);
-							if (!horiz[n.position[1]]) {
-								horiz[n.position[1]] = 1;
-								hori_sum++;
-							}
-							if (!verti[n.position[0]]) {
-								verti[n.position[0]] = 1;
-								vert_sum++;
-							}
-						}
-					if (vert_sum == lat_size && hori_sum == lat_size && matchtype == 2) {
-						perc = true;
-					} else if (hori_sum == lat_size && matchtype == 1) {
-						perc = true;
-					} else if (vert_sum == lat_size && matchtype == 0) {
-						perc = true;
-					} 
+					largest_cluster = lats[i].clusters[j].size();
 				}
 			}
+			if ((int)lats[i].clusters[j].size() > lat_size) {
+				char* horiz = (char*) malloc(lat_size*sizeof(char));
+				char* verti = (char*) malloc(lat_size*sizeof(char));
+				for (int m = 0; m < lat_size; m++) {
+					horiz[m] = 0;
+					verti[m] = 0;
+				}
+				int hori_sum = 0;
+				int vert_sum = 0;
+				for (k = 0; k < (int)lats[i].clusters[j].size(); k++) {
+					NODE n = lats[i].clusters.at(j).at(k);
+					if (horiz[n.position[1]] == 0) {
+						horiz[n.position[1]] = 1;
+						hori_sum++;
+					}
+					if (verti[n.position[0]] == 0) {
+						verti[n.position[0]] = 1;
+						vert_sum++;
+					}
+				}
+				if (vert_sum == lat_size && hori_sum == lat_size && matchtype == 2) {
+					*perc = true;
+				} else if (hori_sum == lat_size && matchtype == 1) {
+					*perc = true;
+				} else if (vert_sum == lat_size && matchtype == 0) {
+					*perc = true;
+				} 
+			}
 		}
+	}
 }
 
 //Splits the larger lattice into sub lattices avoiding race conditions
@@ -285,24 +288,12 @@ void check_cluster() {
 		storage.at(th) = *sub;
 	}
 
-	for (int i = 0; i < threads-1; i++) {
-		merge_clusters(&storage[i],&storage[(i+1)%threads]);
-	}
 	//Merge last with first
 	merge_clusters(&storage[(threads-1)], &storage[0]);
 
-/*
-	printf("\nCluster Output\n");
-	for (int k = 0; k < threads; k++) {
-		printf("Grid: %d\n", k);
-		for (int i = 0; i < (int)storage[k].clusters.size(); i++){
-			printf("Cluster: %d - size: %d\n", i, (int)storage[k].clusters[i].size());
-			//for (int j = 0; j < (int)storage[k].clusters[i].size(); j++) {
-				NODE n = storage[k].clusters[i].at(j);
-				printf("%d  %d\n",n.position[0],n.position[1]);
-			//}
-		}
-	}*/
+	for (int i = 0; i < threads-1; i++) {
+		merge_clusters(&storage[i],&storage[(i+1)%threads]);
+	}
 
-	percolates(percolate, storage, threads);
+	percolates(&percolate, storage, threads);
 }
