@@ -11,11 +11,12 @@
 #include <ctype.h>
 #include <sys/time.h>
 
-#define OPTLIST "p:sbl:t:"
+#define OPTLIST "p:sbl:t:m"
 bool pflag = false;
 bool sflag = false;
 bool bflag = false;
 bool lflag = false;
+bool mflag = false;
 bool percflag = false;
 
 int matchtype;
@@ -53,7 +54,9 @@ void start_search() {
 	}
 	struct timeval start,end;
 	gettimeofday(&start,NULL);
-	search_lattice();
+
+	dfs_traversal();
+
 	gettimeofday(&end,NULL);
 	double delta = ((end.tv_sec-start.tv_sec)* 1000000u+ end.tv_usec - start.tv_usec)/1.e6;
 	printf("%12.10f\n", delta);
@@ -105,6 +108,9 @@ int main(int argc, char** argv)
 					fprintf(stderr, "Invalid percolation type argument enter a number between 0 and 2.\n");
 				}
 				break;
+			case 'm':
+				mflag = true;
+				break;
 			case '?': fprintf(stderr, "Invalid command.\n"); print_usage(); exit(EXIT_FAILURE);
 		}
 	}
@@ -129,5 +135,6 @@ int main(int argc, char** argv)
 	if(lflag) lat_size = lsiz;
 
 	start_search();
+
 	exit(EXIT_SUCCESS);
 }

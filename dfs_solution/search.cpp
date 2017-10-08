@@ -5,15 +5,25 @@
 int largest_cluster = 0;
 int node_sum;
 bool percolate = false;
-const int threads = 4;
+const int threads = 2;
 
-void search_lattice() {
-	check_cluster();
-	printf("[#] Largest Cluster: %d\n", largest_cluster);
-	if (percolate) {
-		printf("[+] Percolates.\n");
+void dfs_traversal() {
+	if (mflag) {
+		check_cluster_multithreaded();
+		printf("[#] Largest Cluster: %d\n", largest_cluster);
+		if (percolate) {
+			printf("[+] Percolates.\n");
+		} else {
+			printf("[X] Does not percolate.\n");
+		}
 	} else {
-		printf("[X] Does not percolate.\n");
+		check_cluster_linear();
+		printf("[#] Largest Cluster: %d\n", largest_cluster);
+		if (percolate) {
+			printf("[+] Percolates.\n");
+		} else {
+			printf("[X] Does not percolate.\n");
+		}
 	}
 }
 
@@ -277,7 +287,7 @@ struct sub_lat* create_sub_lat(int i0, int i1) {
 	return sub;
 }
 
-void check_cluster() {
+void check_cluster_multithreaded() {
 	int arr_split = lat_size/threads;
 	std::vector<struct sub_lat> storage(threads);
 	#pragma omp parallel num_threads(threads)
