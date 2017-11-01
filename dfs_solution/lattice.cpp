@@ -50,7 +50,8 @@ void print_lattice(int len, char viewType)
 void seed_lattice_sites(double prob)
 {
 	//seeding pseudo-random number generator.
-	srand(time(NULL));
+	//srand(time(NULL));
+	srand(1045);
 	#pragma omp parallel for collapse(2)
 		for(int i = 0; i < lat_size; i++) {
 			for(int j = 0; j < lat_size; j++) {

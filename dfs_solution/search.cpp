@@ -5,7 +5,9 @@
 int largest_cluster = 0;
 int node_sum;
 bool percolate = false;
-const int threads = 2;
+const int threads = 8;
+std::vector<std::vector<NODE>> clusters;
+int global_count = 0;
 
 void dfs_traversal() {
 	if (mflag) {
@@ -207,13 +209,25 @@ void sublattice_search(struct sub_lat* sub) {
 //Combine sections on the bottom of the sections of work
 void merge_clusters(struct sub_lat* lat1, struct sub_lat* lat2) {
 	int i;
+	//Create a lookup array that stores for 1 cluster the corresponding cluster index in the first part of the lattice after being moved
+	int *lookup = (int*) malloc(lat2->clusters.size()*sizeof(int));
+	for (int i = 0; i < 2; i ++) {
+		lookup[i] = -1; //False;
+	}
+	i = 0;
+	if (!lookup[0]) printf("False\n");
 	for (i = 0; i < lat_size; i++) {
 		if (sflag) {
 			if (lat.bond_array[lat1->x1-1][i].visited == 2 && lat.bond_array[(lat2->x)%lat_size][i].visited == 2) {
 				int idx1 = lat1->bot_edge[i]-1, idx2 = lat2->top_edge[i]-1;
 				if (idx2>=0 && idx1 >= 0) {
-					lat1->clusters[idx1].insert(std::end(lat1->clusters[idx1]), std::begin(lat2->clusters[idx2]), std::end(lat2->clusters[idx2]));
-					lat2->clusters[idx2].resize(0);
+					if (lat2->clusters[idx2].size() > 0) {
+						//Merge the clusters that allign accross the boundary merging into the first and growing sublattice.
+						lat1->clusters[idx1].insert(std::end(lat1->clusters[idx1]), std::begin(lat2->clusters[idx2]), std::end(lat2->clusters[idx2]));
+						lat2->clusters[idx2].resize(0);
+						
+						lookup[idx2] = idx1; //Set the lookup reference
+					}
 				}
 				
 			}
@@ -221,53 +235,83 @@ void merge_clusters(struct sub_lat* lat1, struct sub_lat* lat2) {
 			//Checks a bond exists between these points
 			if (lat.bond_array[lat1->x1-1][i].down == 1 && lat.bond_array[lat1->x1-1][i].visited == 2 && lat.bond_array[(lat2->x)%lat_size][i].visited == 2) {
 				int idx1 = lat1->bot_edge[i]-1,idx2 = lat2->top_edge[i]-1;
-				if (idx2 >= 0 && idx1 >= 0) {
+				if (idx2 >= 0 && idx1 >= 0 && (lookup[idx2] == -1)) {
 					lat2->clusters[idx2].insert(std::end(lat2->clusters[idx2]), std::begin(lat1->clusters[idx1]), std::end(lat1->clusters[idx1]));
-					lat1->clusters[idx1].resize(0);
 				}
 			}
 		}
 	}
+	/**
+	 * Go along the bottom edge of the second lattice and if the cluster in there has been seen before on the top row, we update the bottom rows
+	 * reference to an index in lat1 which becomes a "super" lattice. Otherwise if the cluster is on the boundary but not seen before then just
+	 * add that cluster to super lattice and update the mapping index.
+	 */
+	for (int i = 0; i < lat_size; i++) {
+
+		/*
+		*CAREFUL OF THIS
+		*/
+		if (lat2->bot_edge[i] >= 0) {
+			if (lookup[lat2->bot_edge[i]] == -1) { //This means that there has been no link made.
+				if (lat2->clusters[lat2->bot_edge[i]].size() > 0) {
+					int idx2 = lat2->bot_edge[i];
+					
+					lat1->clusters.push_back(lat2->clusters[idx2]);
+					
+					lat2->clusters[idx2].resize(0);
+					lookup[lat2->bot_edge[i]] = lat1->clusters.size();
+					lat2->bot_edge[i] = lat1->clusters.size(); //Update the bottom edge's reference
+				}
+			} else {
+				lat2->bot_edge[i] = lookup[lat2->bot_edge[i]]; //Maps between the two.
+			}
+		}
+	}
+	//Merge unused clusters across
+	for (int i = 0; i < (int)lat2->clusters.size(); i++) {
+		if (lat2->clusters[i].size() > 0)
+			lat1->clusters.push_back(lat2->clusters[i]); //take cluster and save it in the first at the end.
+	}
+
+	lat1->x1 = lat2->x1; //replace the extent of the first segment to encompass the last
+	printf("New boundary: %d\n", lat1->x1);
+	memcpy(lat1->bot_edge,lat2->bot_edge,lat_size*(sizeof(int)));
+	lat1->bot_edge = lat2->bot_edge;
 }
 
-void percolates(bool* perc,std::vector<struct sub_lat> lats, int num_lat) {
-	int i,j,k;
-	for (i = 0; i < num_lat; i++) {
-		for (j = 0; j < (int)lats[i].clusters.size(); j++) {
-			#pragma omp critical
-			{
-				if ((int)lats[i].clusters[j].size() > largest_cluster) {
-					largest_cluster = lats[i].clusters[j].size();
+void percolates(bool* perc,struct sub_lat lat, int num_lat) {
+	int j,k;
+	for (j = 0; j < (int)lat.clusters.size(); j++) {
+		if ((int)lat.clusters[j].size() > largest_cluster) {
+			largest_cluster = lat.clusters[j].size();
+		}
+		if ((int)lat.clusters[j].size() > lat_size) {
+			char* horiz = (char*) malloc(lat_size*sizeof(char));
+			char* verti = (char*) malloc(lat_size*sizeof(char));
+			for (int m = 0; m < lat_size; m++) {
+				horiz[m] = 0;
+				verti[m] = 0;
+			}
+			int hori_sum = 0;
+			int vert_sum = 0;
+			for (k = 0; k < (int)lat.clusters[j].size(); k++) {
+				NODE n = lat.clusters.at(j).at(k);
+				if (horiz[n.position[1]] == 0) {
+					horiz[n.position[1]] = 1;
+					hori_sum++;
+				}
+				if (verti[n.position[0]] == 0) {
+					verti[n.position[0]] = 1;
+					vert_sum++;
 				}
 			}
-			if ((int)lats[i].clusters[j].size() > lat_size) {
-				char* horiz = (char*) malloc(lat_size*sizeof(char));
-				char* verti = (char*) malloc(lat_size*sizeof(char));
-				for (int m = 0; m < lat_size; m++) {
-					horiz[m] = 0;
-					verti[m] = 0;
-				}
-				int hori_sum = 0;
-				int vert_sum = 0;
-				for (k = 0; k < (int)lats[i].clusters[j].size(); k++) {
-					NODE n = lats[i].clusters.at(j).at(k);
-					if (horiz[n.position[1]] == 0) {
-						horiz[n.position[1]] = 1;
-						hori_sum++;
-					}
-					if (verti[n.position[0]] == 0) {
-						verti[n.position[0]] = 1;
-						vert_sum++;
-					}
-				}
-				if (vert_sum == lat_size && hori_sum == lat_size && matchtype == 2) {
-					*perc = true;
-				} else if (hori_sum == lat_size && matchtype == 1) {
-					*perc = true;
-				} else if (vert_sum == lat_size && matchtype == 0) {
-					*perc = true;
-				} 
-			}
+			if (vert_sum == lat_size && hori_sum == lat_size && matchtype == 2) {
+				*perc = true;
+			} else if (hori_sum == lat_size && matchtype == 1) {
+				*perc = true;
+			} else if (vert_sum == lat_size && matchtype == 0) {
+				*perc = true;
+			} 
 		}
 	}
 }
@@ -277,8 +321,8 @@ struct sub_lat* create_sub_lat(int i0, int i1) {
 	struct sub_lat* sub = (sub_lat*) malloc(sizeof(sub_lat));
 	sub->x = i0;
 	sub->x1 = i1;
-	sub->bot_edge = (short*) malloc(lat_size*sizeof(short*));
-	sub->top_edge = (short*) malloc(lat_size*sizeof(short*));
+	sub->bot_edge = (int*) malloc(lat_size*sizeof(int*));
+	sub->top_edge = (int*) malloc(lat_size*sizeof(int*));
 
 	for (int j = 0; j < lat_size; j++) {
 		sub->bot_edge[j] = 0;
@@ -298,12 +342,9 @@ void check_cluster_multithreaded() {
 		storage.at(th) = *sub;
 	}
 
-	//Merge last with first
-	merge_clusters(&storage[(threads-1)], &storage[0]);
-
-	for (int i = 0; i < threads-1; i++) {
-		merge_clusters(&storage[i],&storage[(i+1)%threads]);
+	for (int i = 1; i < threads; i++) {
+		merge_clusters(&storage[0],&storage[i]); //we slowly build up the size of 1 overtime.
 	}
 
-	percolates(&percolate, storage, threads);
+	percolates(&percolate, storage[0], threads);
 }

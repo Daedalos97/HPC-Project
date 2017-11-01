@@ -18,8 +18,8 @@ struct sub_lat
 	int x, x1; //The extent of the division of the lattice.
 	int** clust;
 	std::vector<std::vector<NODE>> clusters; //keeps list of all clusters of a lattice
-	short* top_edge; //Maps top edge of area of work to a cluster
-	short* bot_edge; //Maps bot edge of area of work to a cluster
+	int* top_edge; //Maps top edge of area of work to a cluster
+	int* bot_edge; //Maps bot edge of area of work to a cluster
 };
 
 extern int matchtype;
