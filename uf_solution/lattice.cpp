@@ -46,7 +46,8 @@ void print_lattice(int len, char view_type)
 void seed_lattice_sites(double p)
 {
 	//seeding pseudo-random number generator.
-	srand(time(NULL));
+	//srand(time(NULL));
+	srand(12456);
 	for(int i = 0; i < lat.len; i++)
 	{
 		for(int j = 0; j < lat.len; j++)
@@ -66,7 +67,8 @@ void seed_lattice_sites(double p)
  */
 void seed_lattice_bonds(double p)
 {
-	srand(time(NULL));
+	//srand(time(NULL));
+	srand(12456);
 	for(int i = 0; i < lat.len; i++)
 	{
 		for(int j = 0; j < lat.len; j++)

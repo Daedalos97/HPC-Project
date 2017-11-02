@@ -1,5 +1,6 @@
 #include "wqu_unionfind.h"
 #include "lattice.h"
+
 /**
  * An implementation of the Hoshen-Kopelman algorithm for labelling clusters
  * on a grid, based on a (Weighted, Quick Union) Union-Find algorithm.
@@ -15,8 +16,9 @@ int* subtreeSize;  //the size of the subtree from a node.
 std::vector<int> perc_label; //labels that might be assigned to a percolating cluster.
 int len; //stores the size of the lattice.
 bool no_sites_occupied; //since subtree size is being used as size of cluster, this
-												//bool value is to check that there is at least one occupied
-												// site, to prevent it from falsely returning 1.
+			//bool value is to check that there is at least one occupied
+			// site, to prevent it from falsely returning 1.
+
 
 /**
  * Initialize a connectionless lattice of a provided size..
@@ -34,6 +36,11 @@ void init_qu_union_find(int siz)
 }
 
 
+
+/**
+ * Print the parentID array for each element
+ * mainly for debugging.
+ */
 void print_array_parentid()
 {
 	printf("[ ");
@@ -45,6 +52,10 @@ void print_array_parentid()
 }
 
 
+/**
+ * Print the subtree size from each node
+ * implemented for debugging. 
+ */
 void print_array_subtrees()
 {
 	printf("[ ");
@@ -55,6 +66,7 @@ void print_array_subtrees()
 
 	printf("] \n");
 }
+
 
 /**
  * Return the root node of a given node.
@@ -109,7 +121,13 @@ void destroy_qu_union_find()
 	len = 0;
 }
 
-//---------------End of Union Find-----------------------------------//
+/** 
+ * +-------------------------------------------------+
+ * |      - End of Union Find Implementation         |
+ * |      - Start of Percolation Problem             |  
+ * +-------------------------------------------------+
+ */
+
 
 /**
  * Accounts for the wrap-around underflow when applying mod.
@@ -251,6 +269,7 @@ int perform_union_find(int** lattice, int latsiz)
 	{
 		for(int j = 0; j < latsiz; j++)
 		{
+			//printf("^-- Working on lattice element [%d][%d]\n", i, j);
 			if(lattice[i][j] ==1)
 			{
 				no_sites_occupied = false; // at least 1 site is occupied.
@@ -264,14 +283,22 @@ int perform_union_find(int** lattice, int latsiz)
 		}
 	}
 	populate_percolation_label_vector(latsiz);
+	int largestCl = 1;
+	//print_array_subtrees();
 	if(!no_sites_occupied)
 	{
-		std::sort(subtreeSize, len+subtreeSize);
-		printf("[#] largest cluster size = %d\n", subtreeSize[len-1]);
+		//std::sort(subtreeSize, len+subtreeSize);
+		for(int i = 0; i < len; i++ )
+		{
+			if(subtreeSize[i] > largestCl)
+				largestCl = subtreeSize[i];
+		}
+		//print_array_subtrees();
+		printf("[#] largest cluster size = %d\n", largestCl);
 	} else{
 		printf("[#] largest cluster size = %d\n", 0);
 	}
-	if(subtreeSize[len-1] < latsiz) {printf("[X] does NOT percolate!\n"); return -1;}
+	if(largestCl < latsiz) {printf("[X] does NOT percolate!\n"); return -1;}
 	return 1;
 }
 
@@ -286,94 +313,45 @@ int perform_union_find(int** lattice, int latsiz)
 int perform_union_find_m_t_2(int** lattice, int latsiz)
 {
 	no_sites_occupied = true;
-	#pragma omp parallel for schedule(static) num_threads(8) collapse(2)
+
+	//PRODUCES INACCURATE RESULTS!!!
+	#pragma omp parallel for collapse(2) schedule(static)
 	for(int i = 0; i < latsiz; i++)
 	{
 		for(int j = 0; j < latsiz; j++)
 		{
+			//printf("^^^ Thread %d is working on lattice element [%d][%d]\n", omp_get_thread_num(), i, j);
+			//printf("*** %d\n", latsiz);
 			if(lattice[i][j] ==1)
 			{
 				no_sites_occupied = false; // at least 1 site is occupied.
 				//look up.
 				if(lattice[modulo(i-1, latsiz)][j] == 1)
-				{
-						quick_union(twoDto1D(modulo(i-1,latsiz), j, latsiz), twoDto1D(i, j, latsiz));
-				}
+					quick_union(twoDto1D(modulo(i-1,latsiz), j, latsiz), twoDto1D(i, j, latsiz));
 				//look left.
 				if(lattice[i][modulo(j-1, latsiz)] == 1)
-				{
-						quick_union(twoDto1D(i, modulo(j-1, latsiz), latsiz), twoDto1D(i, j, latsiz));
-				}
-			}
-		}
-	}
-
-	populate_percolation_label_vector(latsiz);
-	if(!no_sites_occupied)
-	{
-		std::sort(subtreeSize, len+subtreeSize);
-		printf("[#] largest cluster size = %d\n", subtreeSize[len-1]);
-	} else{
-		printf("[#] largest cluster size = %d\n", 0);
-	}
-	if(subtreeSize[len-1] < latsiz) {printf("[X] does NOT percolate!\n"); return -1;}
-	return 1;
-}
-
-
-
-
-/**
-* Perform union find to connect the sites into a Union Find search tree.
-* Returns -1 if we can establish that there are no percolations.
-* otherwise return 1.
-*/
-int perform_union_find_multi_threaded(int** lattice, int latsiz)
-{
-	no_sites_occupied = true;
-#pragma omp parallel
-{
-#pragma omp single
-{
-	for(int i = 0; i < latsiz; i++)
-	{
-		for(int j = 0; j < latsiz; j++)
-		{
-			if(lattice[i][j] ==1)
-			{
-				no_sites_occupied = false; // at least 1 site is occupied.
-				//look up.
-				if(lattice[modulo(i-1, latsiz)][j] == 1)
-				{
-					#pragma omp task
-					{
-						quick_union(twoDto1D(modulo(i-1,latsiz), j, latsiz), twoDto1D(i, j, latsiz));
-					}
-				}
-				//look left.
-				if(lattice[i][modulo(j-1, latsiz)] == 1)
-				{
-					#pragma omp task
-					{
 					quick_union(twoDto1D(i, modulo(j-1, latsiz), latsiz), twoDto1D(i, j, latsiz));
-					}
-				}
 			}
 		}
 	}
-	#pragma omp taskwait
-}
-}
 
+	//printf("\nmultithreaded component ended...\n\n");
 	populate_percolation_label_vector(latsiz);
+	int largestCl = 1;
+	//print_array_subtrees();
 	if(!no_sites_occupied)
 	{
-		std::sort(subtreeSize, len+subtreeSize);
-		printf("[#] largest cluster size = %d\n", subtreeSize[len-1]);
+		for(int i = 0; i < len; i++ )
+		{
+			if(subtreeSize[i] > largestCl)
+				largestCl = subtreeSize[i];
+		}
+		//print_array_subtrees();
+		printf("[#] largest cluster size = %d\n", largestCl);
 	} else{
 		printf("[#] largest cluster size = %d\n", 0);
 	}
-	if(subtreeSize[len-1] < latsiz) {printf("[X] does NOT percolate!\n"); return -1;}
+	if(largestCl < latsiz) {printf("[X] does NOT percolate!\n"); return -1;}
 	return 1;
 }
 
@@ -387,12 +365,14 @@ int perform_union_find_multi_threaded(int** lattice, int latsiz)
 */
 int perform_union_find_bond(BOND** bonds, int** lattice, int latsiz)
 {
+	no_sites_occupied = true;
 	for(int i = 0; i < latsiz; i++)
 	{
 		for(int j = 0; j < latsiz; j++)
 		{
 			if(lattice[i][j] ==1)
 			{
+				no_sites_occupied = false; // at least 1 site is occupied.
 				//look up.
 				if(bonds[i][j].up == 1)
 					quick_union(twoDto1D(modulo(i-1,latsiz), j, latsiz), twoDto1D(i, j, latsiz));
@@ -403,9 +383,22 @@ int perform_union_find_bond(BOND** bonds, int** lattice, int latsiz)
 		}
 	}
 	populate_percolation_label_vector(latsiz);
-	std::sort(subtreeSize, len+subtreeSize);
-	printf("[#] largest cluster size = %d\n", subtreeSize[len-1]);
-	if(subtreeSize[len-1] < latsiz) {printf("[X] does NOT percolate!\n"); return -1;}
+	int largestCl = 1;
+	//print_array_subtrees();
+	if(!no_sites_occupied)
+	{
+		//std::sort(subtreeSize, len+subtreeSize);
+		for(int i = 0; i < len; i++ )
+		{
+			if(subtreeSize[i] > largestCl)
+				largestCl = subtreeSize[i];
+		}
+		//print_array_subtrees();
+		printf("[#] largest cluster size = %d\n", largestCl);
+	} else{
+		printf("[#] largest cluster size = %d\n", 0);
+	}
+	if(largestCl < latsiz) {printf("[X] does NOT percolate!\n"); return -1;}
 	return 1;
 }
 
@@ -419,6 +412,8 @@ int perform_union_find_bond(BOND** bonds, int** lattice, int latsiz)
 */
 int perform_union_find_m_t_bond(BOND** bonds, int** lattice, int latsiz)
 {
+	no_sites_occupied = true;
+	//PRODUCES INACCURATE RESULTS!!!
 	#pragma omp parallel for schedule(static) num_threads(8) collapse(2)
 	for(int i = 0; i < latsiz; i++)
 	{
@@ -426,6 +421,7 @@ int perform_union_find_m_t_bond(BOND** bonds, int** lattice, int latsiz)
 		{
 			if(lattice[i][j] ==1)
 			{
+				no_sites_occupied = false; // at least 1 site is occupied.
 				//look up.
 				if(bonds[i][j].up == 1)
 					quick_union(twoDto1D(modulo(i-1,latsiz), j, latsiz), twoDto1D(i, j, latsiz));
@@ -436,8 +432,21 @@ int perform_union_find_m_t_bond(BOND** bonds, int** lattice, int latsiz)
 		}
 	}
 	populate_percolation_label_vector(latsiz);
-	std::sort(subtreeSize, len+subtreeSize);
-	printf("[#] largest cluster size = %d\n", subtreeSize[len-1]);
-	if(subtreeSize[len-1] < latsiz) {printf("[X] does NOT percolate!\n"); return -1;}
+	int largestCl = 1;
+	//print_array_subtrees();
+	if(!no_sites_occupied)
+	{
+		//std::sort(subtreeSize, len+subtreeSize);
+		for(int i = 0; i < len; i++ )
+		{
+			if(subtreeSize[i] > largestCl)
+				largestCl = subtreeSize[i];
+		}
+		//print_array_subtrees();
+		printf("[#] largest cluster size = %d\n", largestCl);
+	} else{
+		printf("[#] largest cluster size = %d\n", 0);
+	}
+	if(largestCl < latsiz) {printf("[X] does NOT percolate!\n"); return -1;}
 	return 1;
 }

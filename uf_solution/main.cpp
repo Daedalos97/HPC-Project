@@ -36,7 +36,7 @@ void print_usage()
 	fp = fopen(".usage.in", "r");
 	if(fp == NULL)
 	{
-		fprintf(stderr, "ERROR! Could not print usage\n");
+		fprintf(stderr, "ERROR! Could not print usage.\n");
 		exit(1);
 	}
 
