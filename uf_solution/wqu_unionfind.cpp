@@ -129,6 +129,9 @@ void destroy_qu_union_find()
  */
 
 
+const int NUM_THREADS = 12;
+
+
 /**
  * Accounts for the wrap-around underflow when applying mod.
  */
@@ -315,7 +318,10 @@ int perform_union_find_m_t_2(int** lattice, int latsiz)
 	no_sites_occupied = true;
 
 	//PRODUCES INACCURATE RESULTS!!!
-	#pragma omp parallel for collapse(2) schedule(static)
+	//int boundaryCase = 0;
+	//int chunksize = latsiz/NUM_THREADS;
+
+#pragma omp parallel for collapse(2) schedule(static), num_threads(NUM_THREADS) 
 	for(int i = 0; i < latsiz; i++)
 	{
 		for(int j = 0; j < latsiz; j++)
@@ -325,15 +331,32 @@ int perform_union_find_m_t_2(int** lattice, int latsiz)
 			if(lattice[i][j] ==1)
 			{
 				no_sites_occupied = false; // at least 1 site is occupied.
-				//look up.
-				if(lattice[modulo(i-1, latsiz)][j] == 1)
-					quick_union(twoDto1D(modulo(i-1,latsiz), j, latsiz), twoDto1D(i, j, latsiz));
-				//look left.
+
+				//call union on left..
 				if(lattice[i][modulo(j-1, latsiz)] == 1)
 					quick_union(twoDto1D(i, modulo(j-1, latsiz), latsiz), twoDto1D(i, j, latsiz));
+				//look up.
+				// if(i%chunksize != 0 && lattice[modulo(i-1, latsiz)][j] == 1)
+				// 	quick_union(twoDto1D(modulo(i-1,latsiz), j, latsiz), twoDto1D(i, j, latsiz));
 			}
 		}
 	}
+
+	//stitching
+	for(int j = 0; j < latsiz; j++)
+	{
+		for(int k = 0; k < latsiz; k++)
+		{
+			if(lattice[j][k] == 1)
+			{
+				no_sites_occupied = false;
+
+				if(lattice[modulo(j-1, latsiz)][k] == 1)
+					quick_union(twoDto1D(modulo(j-1,latsiz), k, latsiz), twoDto1D(j, k, latsiz));
+			}
+		}
+	}
+
 
 	//printf("\nmultithreaded component ended...\n\n");
 	populate_percolation_label_vector(latsiz);
